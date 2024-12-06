@@ -4,5 +4,6 @@ exclude =
   __pycache__,
   manage.py,
   settings.py
+  /.github
 
 max-line-length = 88

@@ -6,82 +6,93 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
+  ECR_REPOSITORY: bigdata/team-01
+  AWS_REGION: ap-northeast-2
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-    # 코드 체크아웃
-    - uses: actions/checkout@v4
+      # 코드 체크아웃
+      - uses: actions/checkout@v4
 
-    # Docker 설정
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+      # Docker 빌드 캐시 설정
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-    # Docker Compose 설치
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
+      # Docker 설정
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-    # Docker 이미지 빌드
-    - name: Build Docker Image
-      run: |
-        docker build -t ai-report-web:latest .
-        docker images  # 빌드된 이미지 확인
+      # Docker Compose 설치
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-    # Docker Compose를 사용해 Django 테스트 실행
-    - name: Run Tests with Docker Compose
-      run: |
-        docker-compose up --build -d  # Docker Compose로 서비스 시작
-        sleep 10  # 컨테이너 시작 대기
-        docker-compose exec -T web python manage.py test  # Django 테스트 실행
-        docker-compose down  # 테스트 완료 후 컨테이너 정리
+      # Docker 이미지 빌드
+      - name: Build Docker Image
+        run: |
+          docker build -t ai-report-web:latest .
+          docker images
 
-    # 빌드된 Docker 이미지를 .tar 파일로 저장
-    - name: Save Docker Image as File
-      run: |
-        docker save ai-report-web:latest -o ai-report-web.tar
+      # 서비스 시작 및 준비 상태 확인
+      - name: Wait for Services to be Ready
+        run: |
+          docker-compose up --build -d
+          max_retry=30
+          wait_interval=2
+          for i in $(seq 1 $max_retry); do
+            if docker-compose exec -T web python manage.py check; then
+              break
+            fi
+            sleep $wait_interval
+          done
 
-    # .tar 파일을 GitHub Actions 아티팩트로 업로드
-    - name: Upload Docker Image as Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: docker-image
-        path: ai-report-web.tar
+      # Django 테스트 실행 (병렬 실행)
+      - name: Run Tests
+        run: |
+          docker-compose exec -T web python manage.py test --parallel --keepdb
+
+      # 서비스 정리
+      - name: Cleanup Services
+        run: docker-compose down
 
   push-to-ecr:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-    # 코드 체크아웃
-    - uses: actions/checkout@v4
+      # 코드 체크아웃
+      - uses: actions/checkout@v4
 
-    # Docker 설정
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+      # AWS 인증 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    # 빌드된 Docker 이미지 다운로드
-    - name: Download Docker Image Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: docker-image
+      # Docker 설정
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-    # 다운로드된 Docker 이미지를 로드
-    - name: Load Docker Image
-      run: |
-        docker load -i ai-report-web.tar
+      # Docker 이미지 빌드
+      - name: Build Docker Image
+        run: docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest .
 
-    # AWS ECR 로그인
-    - name: Log in to Amazon ECR
-      run: |
-        aws ecr get-login-password --region ap-northeast-2 \
-        | docker login --username AWS --password-stdin 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # Amazon ECR 로그인
+      - name: Login to Amazon ECR
+        run: aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
-    # Docker 이미지 ECR로 푸시
-    - name: Tag and Push Docker Image to ECR
-      run: |
-        docker tag ai-report-web:latest 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
-        docker push 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
+      # Docker 이미지 ECR로 푸시
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
