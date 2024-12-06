@@ -15,6 +15,11 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
     - name: Build and Run with Docker Compose
       run: |
         docker-compose up -d  # 백그라운드에서 컨테이너 실행
