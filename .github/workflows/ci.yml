@@ -20,16 +20,23 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
 
-    - name: Build and Run with Docker Compose
+    - name: Build Docker Image
       run: |
-        docker-compose up -d  # 컨테이너를 백그라운드에서 실행
-        sleep 10  # 컨테이너가 시작될 시간을 기다림
-        docker-compose exec -T web python manage.py test  # TTY 비활성화
-        docker-compose down  # 테스트 후 컨테이너 정리
+        IMAGE_TAG=$(git rev-parse --short HEAD)
+        docker build -t ai-report:$IMAGE_TAG .
 
+    - name: List Docker Images
+      run: docker images
+
+    - name: Run Tests with Docker Compose
+      run: |
+        docker-compose up -d
+        sleep 10
+        docker-compose exec -T web python manage.py test
+        docker-compose down
 
   push-to-ecr:
-    needs: build-and-test  # build-and-test가 성공해야 실행
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -48,5 +55,5 @@ jobs:
     - name: Tag and Push Docker Image to ECR
       run: |
         IMAGE_TAG=$(git rev-parse --short HEAD)
-        docker tag ai-report:latest 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:$IMAGE_TAG
+        docker tag ai-report:$IMAGE_TAG 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:$IMAGE_TAG
         docker push 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:$IMAGE_TAG
