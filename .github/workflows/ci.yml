@@ -10,15 +10,12 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+    # 코드 체크아웃
     - uses: actions/checkout@v4
 
+    # Docker 설정
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
-
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
 
     # Docker 이미지 빌드
     - name: Build Docker Image
@@ -26,22 +23,35 @@ jobs:
         docker build -t ai-report-web:latest .
         docker images  # 빌드된 이미지 확인
 
-    # Docker Compose를 사용해 Django 테스트 실행
-    - name: Run Tests with Docker Compose
+    # 빌드된 Docker 이미지를 압축하여 아티팩트로 업로드
+    - name: Save Docker Image as Artifact
       run: |
-        docker-compose up --build -d  # Docker Compose로 서비스 시작
-        sleep 10  # 컨테이너 시작 대기
-        docker-compose exec -T web python manage.py test  # Django 테스트 실행
-        docker-compose down  # 테스트 완료 후 컨테이너 정리
+        docker save ai-report-web:latest -o ai-report-web.tar
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image
+        path: ai-report-web.tar
 
   push-to-ecr:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
+    # 코드 체크아웃
     - uses: actions/checkout@v4
 
+    # Docker 설정
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
+
+    # 빌드된 Docker 이미지 다운로드 및 로드
+    - name: Download Docker Image Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: docker-image
+
+    - name: Load Docker Image
+      run: |
+        docker load -i ai-report-web.tar
 
     # AWS ECR 로그인
     - name: Log in to Amazon ECR
@@ -52,13 +62,9 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    # Docker 이미지 푸시 전 확인
-    - name: Verify Image Before Push
-      run: |
-        docker images | grep ai-report-web
-
     # Docker 이미지 ECR로 푸시
     - name: Tag and Push Docker Image to ECR
       run: |
         docker tag ai-report-web:latest 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
         docker push 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
+
