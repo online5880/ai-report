@@ -84,9 +84,26 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Docker 이미지 빌드
-      - name: Build Docker Image
-        run: docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest .
+      # 태그 생성 (커밋 해시, 빌드 번호, 날짜 조합)
+      - name: Generate Tags
+        id: tags
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          BUILD_NUMBER=${{ github.run_number }}
+
+          echo "::set-output name=short_sha::$SHORT_SHA"
+          echo "::set-output name=timestamp::$TIMESTAMP"
+          echo "::set-output name=build_number::$BUILD_NUMBER"
+
+      # Docker 이미지 빌드 및 태깅
+      - name: Build and Tag Docker Image
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.short_sha }} \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ steps.tags.outputs.build_number }} \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.timestamp }} \
+                       .
 
       # Amazon ECR 로그인
       - name: Login to Amazon ECR
@@ -96,3 +113,6 @@ jobs:
       - name: Push Docker Image to ECR
         run: |
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.short_sha }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ steps.tags.outputs.build_number }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.timestamp }}
