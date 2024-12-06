@@ -17,11 +17,25 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
+    # Docker Compose 설치
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
     # Docker 이미지 빌드
     - name: Build Docker Image
       run: |
         docker build -t ai-report-web:latest .
         docker images  # 빌드된 이미지 확인
+
+    # Docker Compose를 사용해 Django 테스트 실행
+    - name: Run Tests with Docker Compose
+      run: |
+        docker-compose up --build -d  # Docker Compose로 서비스 시작
+        sleep 10  # 컨테이너 시작 대기
+        docker-compose exec -T web python manage.py test  # Django 테스트 실행
+        docker-compose down  # 테스트 완료 후 컨테이너 정리
 
     # 빌드된 Docker 이미지를 압축하여 아티팩트로 업로드
     - name: Save Docker Image as Artifact
@@ -67,4 +81,3 @@ jobs:
       run: |
         docker tag ai-report-web:latest 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
         docker push 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com/bigdata/team-01:latest
-
