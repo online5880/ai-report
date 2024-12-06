@@ -10,3 +10,13 @@ services:
     ports:
       - "8000:8000"  # 호스트의 8000번 포트를 컨테이너의 8000번 포트와 연결
     command: python manage.py runserver 0.0.0.0:8000  # Django 서버 실행 명령
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d  # Nginx 설정 파일
+      - ./certs:/etc/nginx/certs  # 인증서 파일 경로
+    ports:
+      - "443:443"  # 호스트의 443번 포트를 컨테이너의 443번 포트와 연결
+    depends_on:
+      - web
