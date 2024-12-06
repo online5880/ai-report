@@ -24,13 +24,14 @@ jobs:
       run: |
         IMAGE_TAG=$(git rev-parse --short HEAD)
         docker build -t ai-report:$IMAGE_TAG .
+        docker images  # 빌드된 이미지 확인
 
-    - name: List Docker Images
-      run: docker images
+    - name: Verify Docker Image Tag
+      run: docker images | grep ai-report
 
-    - name: Run Tests with Docker Compose
+    - name: Build and Run with Docker Compose
       run: |
-        docker-compose up -d
+        docker-compose up --build -d
         sleep 10
         docker-compose exec -T web python manage.py test
         docker-compose down
