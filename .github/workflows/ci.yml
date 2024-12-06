@@ -10,14 +10,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-    # 코드 체크아웃
     - uses: actions/checkout@v4
 
-    # Docker 설정
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
-    # Docker Compose 설치
     - name: Install Docker Compose
       run: |
         sudo apt-get update
@@ -41,10 +38,8 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-    # 코드 체크아웃
     - uses: actions/checkout@v4
 
-    # Docker 설정
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
@@ -56,6 +51,11 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    # Docker 이미지 푸시 전 확인
+    - name: Verify Image Before Push
+      run: |
+        docker images | grep ai-report-web
 
     # Docker 이미지 ECR로 푸시
     - name: Tag and Push Docker Image to ECR
