@@ -15,13 +15,12 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker Image
+    - name: Build and Run with Docker Compose
       run: |
-        docker build -t ai-report .
-
-    - name: Run Tests
-      run: |
-        docker run ai-report python manage.py test
+        docker-compose up -d  # 백그라운드에서 컨테이너 실행
+        sleep 10  # 컨테이너가 시작될 시간을 기다림
+        docker-compose exec web python manage.py test
+        docker-compose down  # 테스트 후 컨테이너 정리
 
   push-to-ecr:
     needs: build-and-test  # build-and-test가 성공해야 실행
