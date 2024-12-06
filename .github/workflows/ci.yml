@@ -37,10 +37,13 @@ jobs:
         docker-compose exec -T web python manage.py test  # Django 테스트 실행
         docker-compose down  # 테스트 완료 후 컨테이너 정리
 
-    # 빌드된 Docker 이미지를 압축하여 아티팩트로 업로드
-    - name: Save Docker Image as Artifact
+    # 빌드된 Docker 이미지를 .tar 파일로 저장
+    - name: Save Docker Image as File
       run: |
         docker save ai-report-web:latest -o ai-report-web.tar
+
+    # .tar 파일을 GitHub Actions 아티팩트로 업로드
+    - name: Upload Docker Image as Artifact
       uses: actions/upload-artifact@v3
       with:
         name: docker-image
@@ -57,12 +60,13 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
-    # 빌드된 Docker 이미지 다운로드 및 로드
+    # 빌드된 Docker 이미지 다운로드
     - name: Download Docker Image Artifact
       uses: actions/download-artifact@v3
       with:
         name: docker-image
 
+    # 다운로드된 Docker 이미지를 로드
     - name: Load Docker Image
       run: |
         docker load -i ai-report-web.tar
