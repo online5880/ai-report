@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_run:
-    workflows:
-      - "Notify Slack on Push"
-    types:
-      - completed
 
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
@@ -119,11 +114,9 @@ jobs:
           docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       # Docker 이미지 ECR로 푸시
-      - name: Build and Tag Docker Image
+      - name: Push Docker Image to ECR
         run: |
-          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest -f WEB/Dockerfile WEB
-          IMAGE_ID=$(docker inspect --format="{{.Id}}" ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest)
-
-          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }}
-          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }}
-          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }}
