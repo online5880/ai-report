@@ -2,9 +2,13 @@ name: Django CI and Push to ECR
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+  workflow_run:
+    workflows:
+      - "Notify Slack on Push"  # Slack 워크플로우 이름
+    types:
+      - completed
 
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
@@ -40,17 +44,18 @@ jobs:
       # Docker 이미지 빌드
       - name: Build Docker Image
         run: |
-          docker build -t ai-report-web:latest .
+          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
           docker images
 
       # 서비스 시작 및 준비 상태 확인
       - name: Wait for Services to be Ready
+        working-directory: WEB
         run: |
           docker-compose up --build -d
           max_retry=30
           wait_interval=2
           for i in $(seq 1 $max_retry); do
-            if docker-compose exec -T web python manage.py check; then
+            if docker-compose exec -T web python app/manage.py check; then
               break
             fi
             sleep $wait_interval
@@ -58,8 +63,9 @@ jobs:
 
       # Django 테스트 실행 (병렬 실행)
       - name: Run Tests
+        working-directory: WEB
         run: |
-          docker-compose exec -T web python manage.py test --parallel --keepdb
+          docker-compose exec -T web python app/manage.py test --parallel --keepdb
 
       # 서비스 정리
       - name: Cleanup Services
@@ -103,7 +109,7 @@ jobs:
                        -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.short_sha }} \
                        -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ steps.tags.outputs.build_number }} \
                        -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.timestamp }} \
-                       .
+                       -f WEB/Dockerfile WEB
 
       # Amazon ECR 로그인
       - name: Login to Amazon ECR
