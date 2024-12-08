@@ -119,9 +119,11 @@ jobs:
           docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       # Docker 이미지 ECR로 푸시
-      - name: Push Docker Image to ECR
+      - name: Build and Tag Docker Image
         run: |
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }}
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest -f WEB/Dockerfile WEB
+          IMAGE_ID=$(docker inspect --format="{{.Id}}" ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest)
+
+          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }}
+          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }}
+          docker tag $IMAGE_ID ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }}
