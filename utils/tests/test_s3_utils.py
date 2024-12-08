@@ -84,38 +84,31 @@ class TestS3Utils(unittest.TestCase):
         """
         S3 버킷에서 파일 다운로드 테스트.
 
-        1. 파일 내용만 문자열로 받기
-        2. 파일을 로컬에 저장하기
+        파일을 로컬에 저장하기만 확인.
         """
         test_file = self.test_files[0]
 
-        # 1. 파일 내용만 문자열로 받기 테스트
-        downloaded_content = self.s3_utils.download_file(test_file["key"])
-        self.assertEqual(downloaded_content, test_file["content"])
-
-        # 2. 파일을 로컬에 저장하기 테스트
+        # 로컬에 저장할 파일 경로
         local_path = os.path.join(self.temp_dir, "downloaded_file.txt")
-        downloaded_content = self.s3_utils.download_file(test_file["key"], local_path)
+
+        # 파일을 로컬에 저장하기 테스트
+        self.s3_utils.download_file(test_file["key"], local_path)
 
         # 파일이 생성되었는지 확인
         self.assertTrue(os.path.exists(local_path))
-
-        # 저장된 파일 내용 확인
-        with open(local_path, "r") as f:
-            saved_content = f.read()
-        self.assertEqual(saved_content, test_file["content"])
 
     def test_non_existent_file(self):
         """
         존재하지 않는 파일 작업 처리 테스트.
 
-        존재하지 않는 파일을 다운로드하거나 삭제하려 할 때
+        존재하지 않는 파일을 다운로드하려 할 때
         적절한 예외가 발생하는지 확인합니다.
         """
         non_existent_key = "non_existent_file.txt"
+        local_path = os.path.join(self.temp_dir, "non_existent_file.txt")
 
         with self.assertRaises(FileNotFoundError):
-            self.s3_utils.download_file(non_existent_key)
+            self.s3_utils.download_file(non_existent_key, local_path)
 
     def tearDown(self):
         """

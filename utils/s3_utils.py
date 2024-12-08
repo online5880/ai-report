@@ -76,17 +76,13 @@ class S3Utils:
             print(f"파일 업로드 중 오류 발생: {e}")
             raise
 
-    def download_file(self, key: str, local_path: str = None) -> str:
+    def download_file(self, key: str, local_path: str) -> None:
         """
         S3 버킷에서 파일 다운로드
 
         Args:
             key (str): 다운로드할 파일의 키(경로)
-            local_path (str, optional): 파일을 저장할 로컬 경로.
-                                    지정하지 않으면 파일 내용을 문자열로만 반환
-
-        Returns:
-            str: 다운로드한 파일의 내용
+            local_path (str): 파일을 저장할 로컬 경로
 
         Raises:
             FileNotFoundError: 파일이 존재하지 않는 경우
@@ -97,19 +93,16 @@ class S3Utils:
             response = self.s3_client.get_object(Bucket=self.BUCKET_NAME, Key=key)
             content = response["Body"].read()
 
-            # local_path가 지정된 경우 파일로 저장
-            if local_path:
-                # 디렉토리 경로 생성
-                directory = os.path.dirname(local_path)
-                if directory:  # 경로가 비어 있지 않을 때만 디렉토리 생성
-                    os.makedirs(directory, exist_ok=True)
+            # 디렉토리 경로 생성
+            directory = os.path.dirname(local_path)
+            if directory:  # 경로가 비어 있지 않을 때만 디렉토리 생성
+                os.makedirs(directory, exist_ok=True)
 
-                # 파일 저장
-                with open(local_path, "wb") as f:
-                    f.write(content)
+            # 파일 저장
+            with open(local_path, "wb") as f:
+                f.write(content)
 
-            # 문자열로 디코딩하여 반환
-            return content.decode("utf-8")
+            print(f"파일이 {local_path}에 성공적으로 다운로드되었습니다.")
 
         except self.s3_client.exceptions.NoSuchKey:
             raise FileNotFoundError(f"파일 '{key}'을(를) 찾을 수 없습니다.")
