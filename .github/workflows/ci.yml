@@ -6,7 +6,7 @@ on:
       - main
   workflow_run:
     workflows:
-      - "Notify Slack on Push"  # Slack 워크플로우 이름
+      - "Notify Slack on Push"
     types:
       - completed
 
@@ -99,27 +99,29 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           BUILD_NUMBER=${{ github.run_number }}
 
-          echo "::set-output name=short_sha::$SHORT_SHA"
-          echo "::set-output name=timestamp::$TIMESTAMP"
-          echo "::set-output name=build_number::$BUILD_NUMBER"
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_ENV
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_ENV
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_ENV
 
       # Docker 이미지 빌드 및 태깅
       - name: Build and Tag Docker Image
         run: |
           docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest \
-                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.short_sha }} \
-                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ steps.tags.outputs.build_number }} \
-                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.timestamp }} \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }} \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }} \
+                       -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }} \
                        -f WEB/Dockerfile WEB
 
       # Amazon ECR 로그인
       - name: Login to Amazon ECR
-        run: aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       # Docker 이미지 ECR로 푸시
       - name: Push Docker Image to ECR
         run: |
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.short_sha }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ steps.tags.outputs.build_number }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.timestamp }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.short_sha }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:build-${{ env.build_number }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.timestamp }}
