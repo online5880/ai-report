@@ -69,6 +69,7 @@ jobs:
 
       # 서비스 정리
       - name: Cleanup Services
+        working-directory: WEB
         run: docker-compose down
 
   push-to-ecr:
