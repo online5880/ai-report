@@ -8,9 +8,10 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # 프로젝트 파일 복사
-COPY . /app
+COPY ./app /app
 
 # 의존성 설치
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Django 서버 실행
