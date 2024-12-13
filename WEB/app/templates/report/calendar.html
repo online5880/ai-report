@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>캘린더</title>
+
+        <!-- FullCalendar CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+
+        <!-- FullCalendar JS -->
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
+
+        <style>
+            #calendar {
+                max-height: 700px; /* 달력의 최대 높이 제한 */
+                overflow-y: auto; /* 넘치는 경우 스크롤 추가 */
+            }
+            #month-selector button {
+                margin: 5px; /* 버튼 간격 조정 */
+            }
+        </style>
+    </head>
+
+<body>
+    <h1>{{ user_id }}의 캘린더</h1>
+
+    <!-- 월 선택 버튼 -->
+    <div id="month-selector" style="margin-bottom: 20px;">
+        <button onclick="goToMonth(0)">1월</button>
+        <button onclick="goToMonth(1)">2월</button>
+        <button onclick="goToMonth(2)">3월</button>
+        <button onclick="goToMonth(3)">4월</button>
+        <button onclick="goToMonth(4)">5월</button>
+        <button onclick="goToMonth(5)">6월</button>
+        <button onclick="goToMonth(6)">7월</button>
+        <button onclick="goToMonth(7)">8월</button>
+        <button onclick="goToMonth(8)">9월</button>
+        <button onclick="goToMonth(9)">10월</button>
+        <button onclick="goToMonth(10)">11월</button>
+        <button onclick="goToMonth(11)">12월</button>
+    </div>
+
+    <div id="calendar"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'ko', // FullCalendar의 언어를 한국어로 설정
+                headerToolbar: {
+                    left: 'prev,next today', // 이전/다음/오늘 버튼
+                    center: 'title', // 현재 월 표시
+                    right: 'dayGridMonth,dayGridWeek,dayGridDay' // 보기 모드
+                },
+                events: [
+                    {% for date in dates %}
+                    {
+                        title: '학습 기록',
+                        start: '{{ date|date:"Y-m-d" }}',
+                        allDay: true,
+                    },
+                    {% endfor %}
+                ],
+                dayMaxEvents: 3, // 하루에 표시할 최대 이벤트 개수
+                moreLinkClick: 'popover' // "더 보기" 클릭 시 팝업으로 표시
+            });
+            calendar.render();
+
+            // 특정 월로 이동하는 함수
+            window.goToMonth = function(month) {
+                var currentYear = new Date().getFullYear(); // 현재 연도 가져오기
+                calendar.gotoDate(new Date(currentYear, month, 1)); // 선택된 월로 이동
+            };
+        });
+    </script>
+</body>
+</html>

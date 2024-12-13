@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Input</title>
+</head>
+<body>
+    <h1>Enter User ID</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="user_id" placeholder="Enter User ID">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

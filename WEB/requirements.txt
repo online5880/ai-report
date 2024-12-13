@@ -3,3 +3,7 @@ python-dotenv
 psycopg
 boto3
 django-storages
+djangorestframework
+pytz
+pandas
+fastparquet
