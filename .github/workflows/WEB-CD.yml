@@ -1,0 +1,59 @@
+name: Django CD to ECS
+
+on:
+  workflow_run:
+    workflows: ["Django CI and Push to ECR"]
+    types:
+      - completed
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECS_CLUSTER: team-01-ecs        # ECS 클러스터 이름
+  ECS_SERVICE: ecs-service        # ECS 서비스 이름
+  ECS_TASK_DEFINITION: ecs-task   # 작업 정의 이름
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: web-container  # 컨테이너 이름
+          image: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Deployment Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "배포가 성공적으로 완료되었습니다!"
+          else
+            echo "배포 중 오류가 발생했습니다."
+            exit 1
+          fi
