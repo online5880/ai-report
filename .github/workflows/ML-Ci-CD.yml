@@ -52,24 +52,20 @@ jobs:
         working-directory: ML
         run: python mlflow_training.py
 
-      # Docker 설치 및 Docker Compose 설치
+      # Docker 및 Docker Compose 설치
       - name: Set up Docker and Docker Compose
         run: |
-          # Docker 설치
           sudo apt-get update
           sudo apt-get install -y docker.io
           sudo systemctl start docker
           sudo systemctl enable docker
 
-          # Docker Compose 설치
           sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version  # 설치 확인
+          docker-compose --version  # 확인
 
       # 모델 등록 후 서빙 서버 확장 및 재시작
       - name: Scale MLflow Serving Containers (Zero Downtime)
         run: |
-          # 절대 경로를 사용하여 `docker-compose.yml` 위치를 정확하게 지정
           docker-compose -f /home/ubuntu/mlflow_project/test_model/docker-compose.yml up -d --scale mlflow-serving=2
-          # 기존 서버를 다운
           docker-compose -f /home/ubuntu/mlflow_project/test_model/docker-compose.yml down
