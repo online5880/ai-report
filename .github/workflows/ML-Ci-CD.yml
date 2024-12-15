@@ -51,3 +51,11 @@ jobs:
       - name: Run MLflow Training
         working-directory: ML
         run: python mlflow_training.py
+
+      # 모델 등록 후 서빙 서버 확장
+      - name: Scale MLflow Serving Containers (Zero Downtime)
+        run: |
+          # 먼저 새로운 서버를 추가하고, 기존 서버는 점진적으로 종료
+          docker-compose -f /home/ubuntu/mlflow_project/test_model/docker-compose.yml up -d --scale mlflow-serving=2
+          # 기존 서버를 다운
+          docker-compose -f /home/ubuntu/mlflow_project/test_model/docker-compose.yml down
