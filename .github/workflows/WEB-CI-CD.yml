@@ -45,7 +45,10 @@ jobs:
         working-directory: WEB
         run: |
           docker-compose up --build -d
-          docker-compose wait
+          until docker-compose exec web curl -f http://localhost:8000; do
+            echo "Waiting for the web service to be ready..."
+            sleep 5
+          done
 
       - name: Run Tests
         working-directory: WEB
@@ -105,6 +108,7 @@ jobs:
 
       - name: Update ECS Task Definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render-task-def
         with:
           task-definition: task-definition.json
           container-name: team-01-ecr
@@ -113,7 +117,7 @@ jobs:
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
@@ -126,7 +130,9 @@ jobs:
       - name: Notify Slack
         run: |
           STATUS="성공"
-          if [[ ${{ job.status }} != 'success' ]]; then
+          if [[ "${{ needs.build-and-test.result }}" != "success" ]] || \
+             [[ "${{ needs.push-to-ecr.result }}" != "success" ]] || \
+             [[ "${{ needs.deploy-to-ecs.result }}" != "success" ]]; then
             STATUS="실패"
           fi
 
@@ -134,7 +140,7 @@ jobs:
             \"text\": \":robot_face: *CI/CD 결과 알림*\",
             \"attachments\": [
               {
-                \"color\": \"$([[ ${{ job.status }} == 'success' ]] && echo 'good' || echo 'danger')\",
+                \"color\": \"$([[ \"$STATUS\" == '성공' ]] && echo 'good' || echo 'danger')\",
                 \"fields\": [
                   {\"title\": \"결과 상태\", \"value\": \"$STATUS\", \"short\": true},
                   {\"title\": \"Workflow\", \"value\": \"Django CI/CD\", \"short\": true},
