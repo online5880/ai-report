@@ -10,22 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Python 설정
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
 
-      # 환경 변수 파일 생성
+      # .env 파일 생성
       - name: Create .env file
         run: |
-          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" > .env
-          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
+          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" > ML/ml.env
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> ML/ml.env
+          echo "=== .env 파일 내용 확인 ==="
+          cat ML/ml.env
 
+      # 의존성 설치
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r ML/requirements.txt
 
+      # 모델 학습 및 등록 실행
       - name: Run MLflow Training
+        working-directory: ML
         run: python mlflow_training.py

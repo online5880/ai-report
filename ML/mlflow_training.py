@@ -8,10 +8,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 import pandas as pd
+from dotenv import load_dotenv
 
-# 환경 변수 로드 (GitHub Actions에서 전달)
+# .env 파일 로드
+load_dotenv(dotenv_path="ml.env")
+
+# 환경 변수 설정
 MLFLOW_SERVER_URI = os.getenv("MLFLOW_SERVER_URI")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+
+# 디버깅: 환경 변수 출력
+print("MLFLOW_SERVER_URI:", MLFLOW_SERVER_URI)
+print("SLACK_WEBHOOK_URL:", SLACK_WEBHOOK_URL)
+
 EXPERIMENT_NAME = "Iris_Classification_Experiment"
 MODEL_NAME = "Iris_Classifier"
 
