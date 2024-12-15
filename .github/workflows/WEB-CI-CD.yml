@@ -9,52 +9,49 @@ env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
   ECR_REPOSITORY: bigdata/team-01
   AWS_REGION: ap-northeast-2
-  ECS_CLUSTER: team-01-ecs
-  ECS_SERVICE: ecs-service
-  ECS_TASK_DEFINITION: ecs-task
 
 jobs:
-  build-and-test:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+  build-and-test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-docker-
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+            ${{ runner.os }}-buildx-
 
       - name: Build Docker Image
         run: |
-          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
-          docker images
+          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB --cache-from=type=local,src=/tmp/.buildx-cache
 
       - name: Wait for Services to be Ready
         working-directory: WEB
         run: |
           docker-compose up --build -d
-          until docker-compose exec web curl -f http://localhost:8000; do
-            echo "Waiting for the web service to be ready..."
-            sleep 5
+          max_retry=30
+          wait_interval=2
+          for i in $(seq 1 $max_retry); do
+            if docker-compose exec -T web python manage.py check; then
+              break
+            fi
+            sleep $wait_interval
           done
 
       - name: Run Tests
         working-directory: WEB
-        run: |
-          set -e
-          docker-compose exec -T web python manage.py test --parallel --keepdb
+        run: docker-compose exec -T web python manage.py test --parallel --keepdb
 
       - name: Cleanup Services
         working-directory: WEB
@@ -64,18 +61,12 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
 
       - name: Build and Tag Docker Image
         run: |
@@ -101,14 +92,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download ECS Task Definition
-        run: |
-          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-          --query taskDefinition > task-definition.json
-
       - name: Update ECS Task Definition
+        id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
-        id: render-task-def
         with:
           task-definition: task-definition.json
           container-name: team-01-ecr
@@ -117,35 +103,21 @@ jobs:
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ecs-service
+          cluster: team-01-ecs
           wait-for-service-stability: true
 
   notify-slack:
     needs: [build-and-test, push-to-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - name: Notify Slack
         run: |
-          STATUS="성공"
-          if [[ "${{ needs.build-and-test.result }}" != "success" ]] || \
-             [[ "${{ needs.push-to-ecr.result }}" != "success" ]] || \
-             [[ "${{ needs.deploy-to-ecs.result }}" != "success" ]]; then
-            STATUS="실패"
-          fi
+          BUILD_STATUS=${{ needs.build-and-test.result }}
+          PUSH_STATUS=${{ needs.push-to-ecr.result }}
+          DEPLOY_STATUS=${{ needs.deploy-to-ecs.result }}
 
           curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \":robot_face: *CI/CD 결과 알림*\",
-            \"attachments\": [
-              {
-                \"color\": \"$([[ \"$STATUS\" == '성공' ]] && echo 'good' || echo 'danger')\",
-                \"fields\": [
-                  {\"title\": \"결과 상태\", \"value\": \"$STATUS\", \"short\": true},
-                  {\"title\": \"Workflow\", \"value\": \"Django CI/CD\", \"short\": true},
-                  {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true}
-                ]
-              }
-            ]
+            \"text\": \":robot_face: *CI/CD 결과 알림*\\n\\n📋 *빌드 상태:* $BUILD_STATUS\\n📦 *푸시 상태:* $PUSH_STATUS\\n🚀 *배포 상태:* $DEPLOY_STATUS\\n\\n🤖 _항상 열심히 일하는 로봇입니다!_ 🦾\"
           }" ${{ secrets.SLACK_WEBHOOK_URL }}
