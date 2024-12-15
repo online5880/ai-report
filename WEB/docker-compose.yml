@@ -10,13 +10,21 @@ services:
     ports:
       - "8000:8000"
     command: python manage.py runserver 0.0.0.0:8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   nginx:
     image: nginx:latest
+    container_name: nginx-server
     volumes:
+      - ./app:/app
       - ./nginx/conf:/etc/nginx/conf.d
       - ./certs:/etc/nginx/certs
     ports:
       - "443:443"
     depends_on:
-      - web
+      web:
+        condition: service_healthy
