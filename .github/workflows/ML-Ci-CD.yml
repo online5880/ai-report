@@ -52,7 +52,14 @@ jobs:
         working-directory: ML
         run: python mlflow_training.py
 
-      # 모델 등록 후 서빙 서버 확장
+      # Docker Compose 설치 (GitHub Actions 환경에서 설치)
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version  # 설치 확인
+
+      # 모델 등록 후 서빙 서버 확장 및 재시작
       - name: Scale MLflow Serving Containers (Zero Downtime)
         run: |
           # 먼저 새로운 서버를 추가하고, 기존 서버는 점진적으로 종료
