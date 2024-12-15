@@ -14,23 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # AWS 자격 증명 설정
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       # Python 설정
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
 
-      # .env 파일 생성
-      - name: Create .env file
-        run: |
-          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" > ML/ml.env
-          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> ML/ml.env
-          echo "=== .env 파일 내용 확인 ==="
-          cat ML/ml.env
-
       # 의존성 설치
       - name: Install dependencies
         run: pip install -r ML/requirements.txt
+
+      # 환경 변수 설정
+      - name: Set environment variables
+        run: |
+          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" >> $GITHUB_ENV
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> $GITHUB_ENV
 
       # 모델 학습 및 등록 실행
       - name: Run MLflow Training
