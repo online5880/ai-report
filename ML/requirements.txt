@@ -1,5 +1,5 @@
 mlflow
 scikit-learn
+pandas
 requests
 python-dotenv
-pandas
