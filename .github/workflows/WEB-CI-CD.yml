@@ -9,124 +9,104 @@ env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
   ECR_REPOSITORY: bigdata/team-01
   AWS_REGION: ap-northeast-2
-  ECS_CLUSTER: team-01-ecs        # ECS 클러스터 이름
-  ECS_SERVICE: ecs-service        # ECS 서비스 이름
-  ECS_TASK_DEFINITION: ecs-task   # 작업 정의 이름
+  ECS_CLUSTER: team-01-ecs
+  ECS_SERVICE: ecs-service
+  ECS_TASK_DEFINITION: ecs-task
 
 jobs:
-  build-and-test:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r WEB/requirements.txt
+
+      - name: Run Linters
+        run: |
+          pip install flake8 black
+          flake8 WEB
+          black --check WEB
+
+      - name: Run Selective Tests
+        working-directory: WEB
+        run: |
+          python manage.py test core.tests.critical_tests --parallel 2
+
+  build-and-push:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.11.2
 
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Build Docker Image
-        run: |
-          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
-          docker images
-
-      - name: Wait for Services to be Ready
-        working-directory: WEB
-        run: |
-          docker-compose up --build -d
-          max_retry=30
-          wait_interval=2
-          for i in $(seq 1 $max_retry); do
-            if docker-compose exec -T web python manage.py check; then
-              break
-            fi
-            sleep $wait_interval
-          done
-
-      - name: Run Tests
-        working-directory: WEB
-        run: |
-          docker-compose exec -T web python manage.py test --parallel --keepdb
-
-      - name: Cleanup Services
-        working-directory: WEB
-        run: docker-compose down
-
-  push-to-ecr:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          context: WEB
+          file: WEB/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and Tag Docker Image
+      - name: Move cache
         run: |
-          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest -f WEB/Dockerfile WEB
-
-      - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
-
-      - name: Push Docker Image to ECR
-        run: |
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy-to-ecs:
-    needs: push-to-ecr
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download ECS Task Definition
+      - name: Download and Update Task Definition
         run: |
-          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-          --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --query taskDefinition > task-definition.json
 
-      - name: Update ECS Task Definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: team-01-ecr
-          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          aws ecs register-task-definition \
+            --cli-input-json file://task-definition.json
 
       - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment
 
   notify-slack:
-    needs: [build-and-test, push-to-ecr, deploy-to-ecs]
+    needs: [lint-and-test, build-and-push, deploy-to-ecs]
     runs-on: ubuntu-latest
     if: always()
     steps:
