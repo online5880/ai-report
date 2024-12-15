@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths: # 특정 경로에 변경 사항이 있을 때만 실행
+      - 'WEB/**'
 
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
@@ -129,11 +131,62 @@ jobs:
     steps:
       - name: Notify Slack
         run: |
-          STATUS="성공"
+          STATUS="✅ 성공"
+          COLOR="#2eb886" # 초록색
+
           if [[ ${{ job.status }} != 'success' ]]; then
-            STATUS="실패"
+            STATUS="❌ 실패"
+            COLOR="#ff0000" # 빨간색
           fi
 
           curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \":robot_face: *CI/CD 결과 알림*\\n\\n📋 *결과 상태:* $STATUS\\n\\n🚀 *Workflow:* Django CI/CD\\n🛠️ *브랜치:* ${{ github.ref_name }}\\n\\n🤖 _항상 열심히 일하는 로봇입니다!_ 🦾\"
+            \"attachments\": [
+              {
+                \"color\": \"${COLOR}\",
+                \"blocks\": [
+                  {
+                    \"type\": \"header\",
+                    \"text\": {
+                      \"type\": \"plain_text\",
+                      \"text\": \"🤖 CI/CD 결과 알림\",
+                      \"emoji\": true
+                    }
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"fields\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*📋 결과 상태:*\n${STATUS}\"
+                      },
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*🛠️ 브랜치:*\n\`${{ github.ref_name }}\`\"
+                      }
+                    ]
+                  },
+                  {
+                    \"type\": \"divider\"
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"fields\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*🚀 Workflow:*\n\`Django CI/CD\`\"
+                      }
+                    ]
+                  },
+                  {
+                    \"type\": \"context\",
+                    \"elements\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"🤖 항상 열심히 일하는 로봇입니다! ⚙️✨\"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }" ${{ secrets.SLACK_WEBHOOK_URL }}
