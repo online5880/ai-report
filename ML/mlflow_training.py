@@ -23,6 +23,7 @@ print("SLACK_WEBHOOK_URL:", SLACK_WEBHOOK_URL)
 
 EXPERIMENT_NAME = "Iris_Classification_Experiment"
 MODEL_NAME = "Iris_Classifier"
+ACCURACY_THRESHOLD = 0.95  # 성능 검증 기준값
 
 
 def send_slack_notification(status, message):
@@ -32,11 +33,12 @@ def send_slack_notification(status, message):
         return
 
     payload = {"text": f"MLflow 작업 상태: {status}\n{message}"}
-    response = requests.post(SLACK_WEBHOOK_URL, json=payload)
-    if response.status_code == 200:
+    try:
+        response = requests.post(SLACK_WEBHOOK_URL, json=payload)
+        response.raise_for_status()
         print("Slack 알림 성공")
-    else:
-        print(f"Slack 알림 실패: {response.status_code}, {response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Slack 알림 실패: {str(e)}")
 
 
 def train_model():
@@ -83,7 +85,7 @@ def train_model():
         raise
 
 
-def register_model(run_id, artifact_uri):
+def register_model(run_id, artifact_uri, accuracy):
     """MLflow 모델 레지스트리에 등록"""
     client = MlflowClient()
     try:
@@ -102,14 +104,15 @@ def register_model(run_id, artifact_uri):
             message=f"모델 등록 성공\nModel: {MODEL_NAME}\nVersion: {model_version.version}",
         )
 
-        # 모델을 'Staging' 단계로 전환
+        # 성능 기준에 따라 모델 단계 전환
+        target_stage = "Production" if accuracy >= ACCURACY_THRESHOLD else "Staging"
         client.transition_model_version_stage(
-            name=MODEL_NAME, version=model_version.version, stage="Staging"
+            name=MODEL_NAME, version=model_version.version, stage=target_stage
         )
-        print(f"Model version {model_version.version} moved to Staging.")
+        print(f"Model version {model_version.version} moved to {target_stage}.")
         send_slack_notification(
             status="성공",
-            message=f"모델 Staging 단계로 전환 완료\nModel: {MODEL_NAME}\nVersion: {model_version.version}",
+            message=f"모델 {target_stage} 단계로 전환 완료\nModel: {MODEL_NAME}\nVersion: {model_version.version}",
         )
     except Exception as e:
         send_slack_notification(status="실패", message=f"모델 등록 중 오류 발생: {str(e)}")
@@ -117,5 +120,5 @@ def register_model(run_id, artifact_uri):
 
 
 if __name__ == "__main__":
-    run_id, artifact_uri = train_model()
-    register_model(run_id, artifact_uri)
+    run_id, artifact_uri, accuracy = train_model()
+    register_model(run_id, artifact_uri, accuracy)

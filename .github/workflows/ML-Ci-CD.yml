@@ -28,15 +28,24 @@ jobs:
         with:
           python-version: "3.8"
 
+      # Python 패키지 캐싱
+      - name: Cache Python dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('ML/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       # 의존성 설치
       - name: Install dependencies
         run: pip install -r ML/requirements.txt
 
-      # 환경 변수 설정
-      - name: Set environment variables
+      # 환경 변수 설정 및 .env 파일 생성
+      - name: Create .env file
         run: |
-          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" >> $GITHUB_ENV
-          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> $GITHUB_ENV
+          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" > ML/ml.env
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> ML/ml.env
 
       # 모델 학습 및 등록 실행
       - name: Run MLflow Training
