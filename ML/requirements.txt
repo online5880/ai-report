@@ -1,0 +1,5 @@
+mlflow
+scikit-learn
+requests
+python-dotenv
+pandas

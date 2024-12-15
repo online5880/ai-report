@@ -1,0 +1,31 @@
+name: MLflow CI/CD
+
+on:
+  push:
+    branches:
+      - dev/model
+
+jobs:
+  train-and-register:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      # 환경 변수 파일 생성
+      - name: Create .env file
+        run: |
+          echo "MLFLOW_SERVER_URI=${{ secrets.MLFLOW_SERVER_URI }}" > .env
+          echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run MLflow Training
+        run: python mlflow_training.py
