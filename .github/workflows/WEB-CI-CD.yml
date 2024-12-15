@@ -1,0 +1,192 @@
+name: Django CI/CD with Slack Notification
+
+on:
+  push:
+    branches:
+      - main
+    paths: # 특정 경로에 변경 사항이 있을 때만 실행
+      - 'WEB/**'
+
+env:
+  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
+  ECR_REPOSITORY: bigdata/team-01
+  AWS_REGION: ap-northeast-2
+  ECS_CLUSTER: team-01-ecs        # ECS 클러스터 이름
+  ECS_SERVICE: ecs-service        # ECS 서비스 이름
+  ECS_TASK_DEFINITION: ecs-task   # 작업 정의 이름
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          buildkit-inline-cache: true
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker Image (for test)
+        run: |
+          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
+          docker images
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Start Services and Run Checks
+        working-directory: WEB
+        run: |
+          docker-compose up --build -d
+          max_retry=30
+          wait_interval=2
+          for i in $(seq 1 $max_retry); do
+            if docker-compose exec -T web python manage.py check; then
+              break
+            fi
+            sleep $wait_interval
+          done
+
+      - name: Run Tests
+        working-directory: WEB
+        run: |
+          docker-compose exec -T web python manage.py test --parallel --keepdb
+
+      - name: Cleanup Services
+        working-directory: WEB
+        run: docker-compose down
+
+  push-to-ecr:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push to ECR
+        uses: docker/build-push-action@v5
+        with:
+          context: WEB
+          file: WEB/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+  deploy-to-ecs:
+    needs: push-to-ecr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download ECS Task Definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Update ECS Task Definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: team-01-ecr
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+  notify-slack:
+    needs: [build-and-test, push-to-ecr, deploy-to-ecs]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Slack
+        run: |
+          STATUS="✅ 성공"
+          COLOR="#2eb886" # 초록색
+
+          if [[ ${{ job.status }} != 'success' ]]; then
+            STATUS="❌ 실패"
+            COLOR="#ff0000" # 빨간색
+          fi
+
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"attachments\": [
+              {
+                \"color\": \"${COLOR}\",
+                \"blocks\": [
+                  {
+                    \"type\": \"header\",
+                    \"text\": {
+                      \"type\": \"plain_text\",
+                      \"text\": \"🤖 CI/CD 결과 알림\",
+                      \"emoji\": true
+                    }
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"fields\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*📋 결과 상태:*\n${STATUS}\"
+                      },
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*🛠️ 브랜치:*\n\`${{ github.ref_name }}\`\"
+                      }
+                    ]
+                  },
+                  {
+                    \"type\": \"divider\"
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"fields\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*🚀 Workflow:*\n\`Django CI/CD\`\"
+                      }
+                    ]
+                  },
+                  {
+                    \"type\": \"context\",
+                    \"elements\": [
+                      {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"🤖 항상 열심히 일하는 로봇입니다! ⚙️✨\"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }" ${{ secrets.SLACK_WEBHOOK_URL }}
