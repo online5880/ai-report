@@ -14,99 +14,112 @@ env:
   ECS_TASK_DEFINITION: ecs-task
 
 jobs:
-  lint-and-test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r WEB/requirements.txt
-
-      - name: Run Linters
-        run: |
-          pip install flake8 black
-          flake8 WEB
-          black --check WEB
-
-      - name: Run Selective Tests
-        working-directory: WEB
-        run: |
-          python manage.py test core.tests.critical_tests --parallel 2
-
-  build-and-push:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            image=moby/buildkit:v0.11.2
 
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-docker-
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: WEB
-          file: WEB/Dockerfile
-          push: true
-          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-      - name: Move cache
+      - name: Install Docker Compose
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-  deploy-to-ecs:
-    needs: build-and-push
+      - name: Build Docker Image
+        run: |
+          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
+          docker images
+
+      - name: Wait for Services to be Ready
+        working-directory: WEB
+        run: |
+          docker-compose up --build -d
+          docker-compose wait
+
+      - name: Run Tests
+        working-directory: WEB
+        run: |
+          set -e
+          docker-compose exec -T web python manage.py test --parallel --keepdb
+
+      - name: Cleanup Services
+        working-directory: WEB
+        run: docker-compose down
+
+  push-to-ecr:
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download and Update Task Definition
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-            --query taskDefinition > task-definition.json
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-          aws ecs register-task-definition \
-            --cli-input-json file://task-definition.json
+      - name: Build and Tag Docker Image
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest -f WEB/Dockerfile WEB
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+  deploy-to-ecs:
+    needs: push-to-ecr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download ECS Task Definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+
+      - name: Update ECS Task Definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: team-01-ecr
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
       - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --force-new-deployment
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
 
   notify-slack:
-    needs: [lint-and-test, build-and-push, deploy-to-ecs]
+    needs: [build-and-test, push-to-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -118,5 +131,15 @@ jobs:
           fi
 
           curl -X POST -H 'Content-type: application/json' --data "{
-            \"text\": \":robot_face: *CI/CD 결과 알림*\\n\\n📋 *결과 상태:* $STATUS\\n\\n🚀 *Workflow:* Django CI/CD\\n🛠️ *브랜치:* ${{ github.ref_name }}\\n\\n🤖 _항상 열심히 일하는 로봇입니다!_ 🦾\"
+            \"text\": \":robot_face: *CI/CD 결과 알림*\",
+            \"attachments\": [
+              {
+                \"color\": \"$([[ ${{ job.status }} == 'success' ]] && echo 'good' || echo 'danger')\",
+                \"fields\": [
+                  {\"title\": \"결과 상태\", \"value\": \"$STATUS\", \"short\": true},
+                  {\"title\": \"Workflow\", \"value\": \"Django CI/CD\", \"short\": true},
+                  {\"title\": \"브랜치\", \"value\": \"${{ github.ref_name }}\", \"short\": true}
+                ]
+              }
+            ]
           }" ${{ secrets.SLACK_WEBHOOK_URL }}
