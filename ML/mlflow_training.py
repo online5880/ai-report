@@ -79,7 +79,7 @@ def train_model():
                 status="성공",
                 message=f"모델 학습 성공\nRun ID: {run_id}\nAccuracy: {accuracy:.2f}",
             )
-            return run_id, artifact_uri
+            return run_id, artifact_uri, accuracy
     except Exception as e:
         send_slack_notification(status="실패", message=f"모델 학습 중 오류 발생: {str(e)}")
         raise
