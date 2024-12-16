@@ -31,13 +31,26 @@ class TestHistory(models.Model):
         )
     """
 
-    user_id = models.UUIDField(default=uuid.uuid4)  # UUID
-    m_code = models.CharField(max_length=50)  # 문자열 (mCode)
+    user_id = models.UUIDField(default=uuid.uuid4, db_index=True)  # UUID
+    m_code = models.CharField(max_length=50, db_index=True)  # 문자열 (mCode)
     no = models.IntegerField()  # 정수형 (No)
-    quiz_code = models.BigIntegerField()  # 정수형 (QuizCode), 큰 정수 처리
+    quiz_code = models.BigIntegerField(db_index=True)  # 정수형 (QuizCode), 큰 정수 처리
     answer = models.TextField(null=True, blank=True)  # 긴 문자열 허용 (Answer)
-    correct = models.CharField(max_length=1)  # 한 글자 문자열 (Correct)
-    cre_date = models.DateTimeField()  # 날짜/시간 (CreDate)
+    correct = models.CharField(max_length=1, db_index=True)  # 한 글자 문자열 (Correct)
+    cre_date = models.DateTimeField(db_index=True)  # 날짜/시간 (CreDate)
 
     def __str__(self):
         return f"{self.user_id} - {self.m_code}"
+
+
+class DailyReport(models.Model):
+    user_id = models.UUIDField(default=uuid.uuid4, db_index=True)
+    date = models.DateField(db_index=True)  # 날짜를 기준으로 리포트 저장
+    report_content = models.TextField()  # 리포트 내용 저장
+    created_at = models.DateTimeField(auto_now_add=True)  # 생성일시
+
+    class Meta:
+        unique_together = ("user_id", "date")  # 동일한 날짜에 대해 중복 저장 방지
+
+    def __str__(self):
+        return f"리포트 ({self.date}) - {self.user_id}"

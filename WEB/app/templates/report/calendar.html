@@ -1,78 +1,159 @@
 <!DOCTYPE html>
 <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>캘린더</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캘린더</title>
 
-        <!-- FullCalendar CSS -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <!-- FullCalendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
 
-        <!-- FullCalendar JS -->
-        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
+    <!-- marked.js for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-        <style>
-            #calendar {
-                max-height: 700px; /* 달력의 최대 높이 제한 */
-                overflow-y: auto; /* 넘치는 경우 스크롤 추가 */
-            }
-            #month-selector button {
-                margin: 5px; /* 버튼 간격 조정 */
-            }
-        </style>
-    </head>
+    <style>
+        /* 전체 페이지 레이아웃 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 10px;
+        }
+
+        /* 캘린더 영역 */
+        #calendar-container {
+            flex-grow: 1; /* 남은 공간 모두 차지 */
+            overflow: hidden;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #calendar {
+            height: 100%; /* 부모 높이에 맞게 설정 */
+        }
+
+        /* 일일 리포트 영역 */
+        #llm-response {
+            width: 400px; /* 고정된 너비 */
+            padding: 10px;
+            border-left: 1px solid #ccc;
+            background-color: #f9f9f9;
+            overflow-y: auto;
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            display: block; /* 항상 보이도록 설정 */
+        }
+
+        #llm-response h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #llm-output {
+            white-space: normal;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+    </style>
+</head>
 
 <body>
-    <h1>{{ user_id }}의 캘린더</h1>
+    <h1 style="padding-left: 10px;">{{ user_id }}의 캘린더</h1>
 
     <!-- 월 선택 버튼 -->
     <div id="month-selector" style="margin-bottom: 20px;">
-        <button onclick="goToMonth(0)">1월</button>
-        <button onclick="goToMonth(1)">2월</button>
-        <button onclick="goToMonth(2)">3월</button>
-        <button onclick="goToMonth(3)">4월</button>
-        <button onclick="goToMonth(4)">5월</button>
-        <button onclick="goToMonth(5)">6월</button>
-        <button onclick="goToMonth(6)">7월</button>
-        <button onclick="goToMonth(7)">8월</button>
-        <button onclick="goToMonth(8)">9월</button>
-        <button onclick="goToMonth(9)">10월</button>
-        <button onclick="goToMonth(10)">11월</button>
-        <button onclick="goToMonth(11)">12월</button>
+        {% for month in months %}
+        <button onclick="goToMonth({{ month|add:'-1' }})">{{ month }}월</button>
+        {% endfor %}
     </div>
 
-    <div id="calendar"></div>
+    <div class="container">
+        <!-- 캘린더 -->
+        <div id="calendar-container">
+            <div id="calendar"></div>
+        </div>
+
+        <!-- 일일 리포트 -->
+        <div id="llm-response">
+            <h2>일일 리포트</h2>
+            <div id="llm-output">
+                리포트를 확인하려면 날짜를 클릭해주세요.
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                locale: 'ko', // FullCalendar의 언어를 한국어로 설정
+                locale: 'ko',
                 headerToolbar: {
-                    left: 'prev,next today', // 이전/다음/오늘 버튼
-                    center: 'title', // 현재 월 표시
-                    right: 'dayGridMonth,dayGridWeek,dayGridDay' // 보기 모드
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek,dayGridDay'
                 },
                 events: [
                     {% for date in dates %}
                     {
-                        title: '학습 기록',
+                        title: '리포트 확인',
                         start: '{{ date|date:"Y-m-d" }}',
                         allDay: true,
+                        extendedProps: {
+                            hasReport: true
+                        }
                     },
                     {% endfor %}
                 ],
-                dayMaxEvents: 3, // 하루에 표시할 최대 이벤트 개수
-                moreLinkClick: 'popover' // "더 보기" 클릭 시 팝업으로 표시
+                eventClick: function(info) {
+                    fetchLLMReport(info.event.startStr);
+                }
             });
             calendar.render();
 
-            // 특정 월로 이동하는 함수
+            // 월 이동 기능
             window.goToMonth = function(month) {
-                var currentYear = new Date().getFullYear(); // 현재 연도 가져오기
-                calendar.gotoDate(new Date(currentYear, month, 1)); // 선택된 월로 이동
+                var currentYear = new Date().getFullYear();
+                calendar.gotoDate(new Date(currentYear, month, 1));
+            };
+
+            // LLM 리포트 API 호출
+            window.fetchLLMReport = function(date) {
+                const output = document.getElementById('llm-output');
+                output.innerHTML = "불러오는 중...";
+
+                fetch(`/api/streaming-daily-report/{{ user_id }}/?date=${date}`)
+                    .then(response => {
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder("utf-8");
+                        let accumulatedText = "";
+
+                        function read() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    output.innerHTML = marked.parse(accumulatedText);
+                                    return;
+                                }
+                                const chunk = decoder.decode(value, { stream: true });
+                                accumulatedText += chunk;
+                                output.innerHTML = marked.parse(accumulatedText);
+                                read();
+                            });
+                        }
+                        read();
+                    })
+                    .catch(error => {
+                        output.innerHTML = "오류 발생: " + error.message;
+                    });
             };
         });
     </script>

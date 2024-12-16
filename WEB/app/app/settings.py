@@ -14,7 +14,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv("../../web.env")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     "storages",
     "boto3",
     "rest_framework",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -104,7 +106,6 @@ else:
             "PORT": os.getenv("PORT"),
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -168,3 +169,13 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 MEDIA_URL = "/mediafiles/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+
+
+ASGI_APPLICATION = "app.asgi.application"
+
+# Channels 레이어 설정 (In-Memory Layer 또는 Redis 설정 가능)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # 간단한 테스트용
+    },
+}
