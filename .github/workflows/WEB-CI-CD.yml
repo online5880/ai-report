@@ -3,7 +3,7 @@ name: Django CI/CD with Slack Notification
 on:
   push:
     branches:
-      - dev/model
+      - dev/web
 
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
