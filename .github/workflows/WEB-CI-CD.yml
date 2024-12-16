@@ -3,9 +3,7 @@ name: Django CI/CD with Slack Notification
 on:
   push:
     branches:
-      - main
-    paths: # 특정 경로에 변경 사항이 있을 때만 실행
-      - 'WEB/**'
+      - dev/model
 
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
