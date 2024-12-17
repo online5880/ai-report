@@ -90,11 +90,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # ECS 서비스의 기존 작업을 종료 (desired-count 0으로 설정)
+      - name: Stop ECS service tasks (desired-count 0)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --desired-count 0
+
+      # ECS Task Definition 다운로드
       - name: Download ECS Task Definition
         run: |
           aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query taskDefinition > task-definition.json
 
+      # ECS Task Definition 업데이트 (새로운 이미지 사용)
       - name: Update ECS Task Definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -103,6 +113,7 @@ jobs:
           container-name: team-01-ecr
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
+      # ECS 서비스에 새로운 작업 배포
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -110,6 +121,14 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
+      - name: Restart ECS service tasks (desired-count 1)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --desired-count 1
 
 
   notify-slack:
