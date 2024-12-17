@@ -81,7 +81,6 @@ jobs:
 
   deploy-to-ecs:
     needs: push-to-ecr
-    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
@@ -94,9 +93,9 @@ jobs:
       - name: Download ECS Task Definition
         run: |
           aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-            --query taskDefinition > task-definition.json
+          --query taskDefinition > task-definition.json
 
-      - name: Update ECS Task Definition with new image
+      - name: Update ECS Task Definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -104,17 +103,13 @@ jobs:
           container-name: team-01-ecr
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
-      - name: Update ECS Service
-        run: |
-          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --task-definition ${{ steps.task-def.outputs.task-definition }} \
-            --desired-count 1
-
-      - name: Wait for service stability
-        run: |
-          aws ecs wait services-stable --cluster ${{ env.ECS_CLUSTER }} \
-            --services ${{ env.ECS_SERVICE }}
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
 
 
   notify-slack:
