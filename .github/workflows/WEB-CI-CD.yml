@@ -101,16 +101,21 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: team-01-ecr  # ECS 작업 정의에 실제 존재하는 컨테이너 이름을 사용하세요.
+          container-name: team-01-ecr
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ steps.task-def.outputs.task-definition }} \
+            --desired-count 1  # 원하는 EC2 인스턴스 수 (여기서는 1개로 설정)
+
+      - name: Wait for service stability
+        run: |
+          aws ecs wait services-stable --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+
 
   notify-slack:
     needs: [build-and-test, push-to-ecr, deploy-to-ecs]
