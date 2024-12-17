@@ -25,9 +25,9 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://15.165.31.54",  # 서버 IP
-    "https://mane.my",  # 메인 도메인
-    "https://*.mane.my",  # 서브도메인
+    "http://15.165.31.54",  # 서버 IP
+    "http://mane.my",  # 메인 도메인
+    "http://*.mane.my",  # 서브도메인
 ]
 
 # Application definition
