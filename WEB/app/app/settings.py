@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-ie$zjz69s1dwxgqg2@a3m+kcrq8gl8272@jc7t0*bt7^p_ttan"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("USE_DEBUG")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -88,22 +88,22 @@ if DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DEBUG_NAME"),
-            "USER": os.getenv("DEBUG_USER"),
-            "PASSWORD": os.getenv("DEBUG_PASSWORD"),
-            "HOST": os.getenv("DEBUG_HOST"),
-            "PORT": os.getenv("DEBUG_PORT"),
+            "NAME": os.getenv("DB_DEBUG_NAME"),
+            "USER": os.getenv("DB_DEBUG_USER"),
+            "PASSWORD": os.getenv("DB_DEBUG_PASSWORD"),
+            "HOST": os.getenv("DB_DEBUG_HOST"),
+            "PORT": os.getenv("DB_DEBUG_PORT"),
         }
     }
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("NAME"),
-            "USER": os.getenv("USER"),
-            "PASSWORD": os.getenv("PASSWORD"),
-            "HOST": os.getenv("HOST"),
-            "PORT": os.getenv("PORT"),
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST"),
+            "PORT": os.getenv("DB_PORT"),
         }
     }
 

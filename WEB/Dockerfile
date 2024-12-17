@@ -10,12 +10,7 @@ WORKDIR /app
 # 프로젝트 파일 복사
 COPY ./app /app
 
-
 # 의존성 설치
 COPY requirements.txt /app/
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Django 서버 실행
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-# CMD ["python", "manage.py", "runserver"]

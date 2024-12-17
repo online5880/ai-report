@@ -38,32 +38,16 @@ jobs:
           docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
           docker images
 
-      - name: Install Docker Compose
+      - name: Create web.env from Secrets
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          echo "DB_HOST=${{ secrets.DB_HOST }}" > WEB/web.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> WEB/web.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> WEB/web.env
 
-      - name: Start Services and Run Checks
-        working-directory: WEB
+      - name: Run Django Migrations and Tests
         run: |
-          docker-compose up --build -d
-          max_retry=30
-          wait_interval=2
-          for i in $(seq 1 $max_retry); do
-            if docker-compose exec -T web python manage.py check; then
-              break
-            fi
-            sleep $wait_interval
-          done
-
-      - name: Run Tests
-        working-directory: WEB
-        run: |
-          docker-compose exec -T web python manage.py test --parallel --keepdb
-
-      - name: Cleanup Services
-        working-directory: WEB
-        run: docker-compose down
+          docker run --env-file WEB/web.env ai-report-web:latest python manage.py migrate
+          docker run --env-file WEB/web.env ai-report-web:latest python manage.py test --parallel --keepdb
 
   push-to-ecr:
     needs: build-and-test
@@ -132,7 +116,8 @@ jobs:
           STATUS="✅ 성공"
           COLOR="#2eb886" # 초록색
 
-          if [[ ${{ job.status }} != 'success' ]]; then
+          # 실패 시 상태 업데이트
+          if [[ ${{ job.status }} == 'failure' ]]; then
             STATUS="❌ 실패"
             COLOR="#ff0000" # 빨간색
           fi
