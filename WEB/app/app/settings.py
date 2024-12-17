@@ -147,7 +147,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-USE_S3 = os.getenv("USE_S3") == "TRUE"
+USE_S3 = os.getenv("USE_S3")
 
 if USE_S3:
     # aws settings
@@ -165,7 +165,9 @@ else:
     STATIC_URL = "/staticfiles/"
     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # 실제 static 파일 경로
+]
 
 MEDIA_URL = "/mediafiles/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
