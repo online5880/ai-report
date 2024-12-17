@@ -46,12 +46,19 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> WEB/web.env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> WEB/web.env
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> WEB/web.env
+        shell: bash
 
       - name: Run Django Migrations and Tests
         run: |
           set -e
-          docker run --env-file WEB/web.env ai-report-web:latest python manage.py migrate
-          docker run --env-file WEB/web.env ai-report-web:latest python manage.py test --parallel --keepdb
+          docker run --env-file WEB/web.env --name ai-report-test ai-report-web:latest python manage.py migrate
+          docker run --env-file WEB/web.env --name ai-report-test ai-report-web:latest python manage.py test --parallel --keepdb
+
+      - name: Cleanup Docker Container
+        if: always()
+        run: |
+          docker stop ai-report-test || true
+          docker rm ai-report-test || true
 
   push-to-ecr:
     needs: build-and-test
@@ -117,10 +124,14 @@ jobs:
     steps:
       - name: Notify Slack
         run: |
-          if [[ "${{ needs.build-and-test.result }}" == "failure" ||
-                "${{ needs.push-to-ecr.result }}" == "failure" ||
-                "${{ needs.deploy-to-ecs.result }}" == "failure" ]]; then
-            STATUS="❌ 실패"
+          if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
+            STATUS="❌ 빌드 및 테스트 실패"
+            COLOR="#ff0000"
+          elif [[ "${{ needs.push-to-ecr.result }}" == "failure" ]]; then
+            STATUS="❌ ECR 푸시 실패"
+            COLOR="#ff0000"
+          elif [[ "${{ needs.deploy-to-ecs.result }}" == "failure" ]]; then
+            STATUS="❌ ECS 배포 실패"
             COLOR="#ff0000"
           else
             STATUS="✅ 성공"
