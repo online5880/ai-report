@@ -23,8 +23,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        with:
-          buildkit-inline-cache: true
 
       - name: Cache Docker layers
         uses: actions/cache@v3
@@ -47,12 +45,6 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> WEB/web.env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> WEB/web.env
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> WEB/web.env
-        shell: bash
-
-      - name: Cleanup Docker Container
-        if: always()
-        run: |
-          docker rm -f ai-report-test || true
 
   push-to-ecr:
     needs: build-and-test
@@ -92,22 +84,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ECS Task Definition 다운로드
       - name: Download ECS Task Definition
         run: |
-          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-          --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --query taskDefinition \
+            --output json > task-definition.json
 
-      # ECS Task Definition 업데이트 (새로운 이미지 사용)
       - name: Update ECS Task Definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: team-01-ecr  # 컨테이너 이름과 일치해야 함
+          container-name: team-01-ecr  # 컨테이너 이름
           image: ${{ env.ECR_IMAGE }}
 
-      # ECS 서비스에 새로운 작업 배포
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
@@ -115,7 +106,6 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-
 
   notify-slack:
     needs: [build-and-test, push-to-ecr, deploy-to-ecs]
