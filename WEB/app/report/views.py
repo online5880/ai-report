@@ -75,6 +75,7 @@ class StreamingDailyReportAPI(APIView):
 
         for chunk in chain.stream(prompt):
             report_content += chunk
+            print(report_content)
             yield chunk
 
         if report_content:
@@ -156,5 +157,5 @@ class StreamingDailyReportAPI(APIView):
 
         return StreamingHttpResponse(
             self.stream_response(prompt, user_id, date),
-            content_type="text/markdown; charset=utf-8",
+            content_type="text/event-stream; charset=utf-8",
         )

@@ -131,30 +131,61 @@
                 const output = document.getElementById('llm-output');
                 output.innerHTML = "불러오는 중...";
 
-                fetch(`/api/streaming-daily-report/{{ user_id }}/?date=${date}`)
-                    .then(response => {
+                // 서버에서 데이터를 가져오는 함수
+                async function fetchReportStream() {
+                    try {
+                        const response = await fetch(`/api/streaming-daily-report/{{ user_id }}/?date=${date}`);
+
+                        // 오류 응답 처리
+                        if (!response.ok) {
+                            throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
+                        }
+
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder("utf-8");
-                        let accumulatedText = "";
 
-                        function read() {
-                            reader.read().then(({ done, value }) => {
-                                if (done) {
-                                    output.innerHTML = marked.parse(accumulatedText);
-                                    return;
-                                }
-                                const chunk = decoder.decode(value, { stream: true });
-                                accumulatedText += chunk;
-                                output.innerHTML = marked.parse(accumulatedText);
-                                read();
-                            });
+                        let accumulatedText = ""; // 전체 데이터를 누적 저장
+                        let chunkBuffer = "";     // 실시간으로 처리할 버퍼
+
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) {
+                                break; // 스트림 끝
+                            }
+
+                            // 청크 데이터 처리
+                            const chunk = decoder.decode(value, { stream: true });
+                            chunkBuffer += chunk;
+
+                            // 누적 텍스트에 추가
+                            accumulatedText += chunkBuffer;
+
+                            // 화면 업데이트 최적화: 한번에 처리된 청크로만 갱신
+                            updateOutput(output, accumulatedText);
+
+                            chunkBuffer = ""; // 버퍼 초기화
                         }
-                        read();
-                    })
-                    .catch(error => {
-                        output.innerHTML = "오류 발생: " + error.message;
+
+                        // 최종 완료 메시지
+                        output.innerHTML = marked.parse(accumulatedText);
+
+                    } catch (error) {
+                        console.error("스트리밍 오류:", error);
+                        output.innerHTML = `<p style="color:red;">오류 발생: ${error.message}</p>`;
+                    }
+                }
+
+                // 화면에 데이터를 표시하는 함수
+                function updateOutput(element, content) {
+                    requestAnimationFrame(() => {
+                        element.innerHTML = marked.parse(content);
                     });
+                }
+
+                // 스트리밍 함수 실행
+                fetchReportStream();
             };
+
         });
     </script>
 </body>

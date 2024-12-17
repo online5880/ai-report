@@ -1,15 +1,24 @@
+# docker-compose.yml
+version: '3'
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: web
     volumes:
       - ./app:/app
     ports:
       - "8000:8000"
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn --bind 0.0.0.0:8000 app.wsgi:application  # Gunicorn 사용
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0:8000"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]  # healthcheck에 localhost 사용
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    external: true

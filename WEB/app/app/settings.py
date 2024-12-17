@@ -17,6 +17,9 @@ ALLOWED_HOSTS = [
     "15.165.31.54",  # 서버 IP 주소
     "mane.my",  # 메인 도메인
     ".mane.my",  # 서브도메인 허용
+    "127.0.0.1",
+    "localhost",
+    "0.0.0.0",
 ]
 
 SECURE_SSL_REDIRECT = False
@@ -40,10 +43,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "user",
     "report",
-    "storages",  # S3 스토리지 사용
+    "storages",
     "boto3",
     "rest_framework",
     "channels",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -54,7 +58,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "app.urls"
 
