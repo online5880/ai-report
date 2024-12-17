@@ -40,7 +40,7 @@ jobs:
 
       - name: Create env file dynamically
         run: |
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > WEB/web.env
+          echo "SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" > WEB/web.env
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> WEB/web.env
           echo "DB_USER=${{ secrets.DB_USER }}" >> WEB/web.env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> WEB/web.env
@@ -93,6 +93,7 @@ jobs:
 
   deploy-to-ecs:
     needs: push-to-ecr
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
