@@ -82,6 +82,8 @@ jobs:
   deploy-to-ecs:
     needs: push-to-ecr
     runs-on: ubuntu-latest
+    env:
+      ECR_IMAGE: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -102,8 +104,8 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: team-01-ecr
-          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          container-name: team-01-ecr  # 컨테이너 이름과 일치해야 함
+          image: ${{ env.ECR_IMAGE }}
 
       # ECS 서비스에 새로운 작업 배포
       - name: Deploy to ECS
