@@ -82,29 +82,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "app.wsgi.application"
 
-# # Database
-# if DEBUG:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.postgresql",
-#             "NAME": os.getenv("DB_DEBUG_NAME"),
-#             "USER": os.getenv("DB_DEBUG_USER"),
-#             "PASSWORD": os.getenv("DB_DEBUG_PASSWORD"),
-#             "HOST": os.getenv("DB_DEBUG_HOST"),
-#             "PORT": os.getenv("DB_DEBUG_PORT"),
-#         }
-#     }
-# else:
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+# Database
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_DEBUG_NAME"),
+            "USER": os.getenv("DB_DEBUG_USER"),
+            "PASSWORD": os.getenv("DB_DEBUG_PASSWORD"),
+            "HOST": os.getenv("DB_DEBUG_HOST"),
+            "PORT": os.getenv("DB_DEBUG_PORT"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST"),
+            "PORT": os.getenv("DB_PORT"),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -138,8 +138,6 @@ if USE_S3:
 else:
     STATIC_URL = "/staticfiles/"
     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/mediafiles/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")

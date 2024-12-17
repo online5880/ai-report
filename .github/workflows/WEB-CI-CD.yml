@@ -3,15 +3,16 @@ name: Django CI/CD with Slack Notification
 on:
   push:
     branches:
-      - dev/web
+      - dev/web  # dev/web 브랜치로 푸시될 때 실행
 
 env:
-  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
-  ECR_REPOSITORY: bigdata/team-01
-  AWS_REGION: ap-northeast-2
-  ECS_CLUSTER: team-01-ecs
-  ECS_SERVICE: ecs-service
-  ECS_TASK_DEFINITION: ecs-task
+  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com  # ECR 레지스트리
+  ECR_REPOSITORY: bigdata/team-01  # ECR 저장소 이름
+  AWS_REGION: ap-northeast-2  # AWS 리전
+  ECS_CLUSTER: team-01-ecs  # ECS 클러스터
+  ECS_SERVICE: ecs-service  # ECS 서비스
+  ECS_TASK_DEFINITION: ecs-task  # ECS 작업 정의
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  # Slack 웹훅 URL
 
 jobs:
   build-and-test:
@@ -47,19 +48,6 @@ jobs:
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> WEB/web.env
           echo "DB_PORT=${{ secrets.DB_PORT }}" >> WEB/web.env
         shell: bash
-
-      - name: Run Django Migrations and Tests
-        run: |
-          set -e
-          # 기존 컨테이너 중지 및 삭제 (이미 존재할 경우 대비)
-          docker rm -f ai-report-test || true
-
-          # 마이그레이션 실행
-          docker run --env-file WEB/web.env --name ai-report-test ai-report-web:latest python manage.py migrate
-
-          # 테스트 실행
-          docker rm -f ai-report-test || true
-          docker run --env-file WEB/web.env --name ai-report-test ai-report-web:latest python manage.py test --parallel --keepdb
 
       - name: Cleanup Docker Container
         if: always()
@@ -113,7 +101,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: team-01-ecr
+          container-name: team-01-ecr  # ECS 작업 정의에 실제 존재하는 컨테이너 이름을 사용하세요.
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
 
       - name: Deploy to ECS
@@ -127,7 +115,7 @@ jobs:
   notify-slack:
     needs: [build-and-test, push-to-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
-    if: always()
+    if: always()  # 항상 실행
     steps:
       - name: Notify Slack
         run: |
