@@ -90,14 +90,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # ECS 서비스의 기존 작업을 종료 (desired-count 0으로 설정)
-      - name: Stop ECS service tasks (desired-count 0)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --desired-count 0
-
       # ECS Task Definition 다운로드
       - name: Download ECS Task Definition
         run: |
@@ -121,14 +113,6 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-
-      # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
-      - name: Restart ECS service tasks (desired-count 1)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --desired-count 1
 
 
   notify-slack:
