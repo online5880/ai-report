@@ -91,12 +91,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update ECS Service with new image
+      - name: Download ECS Task Definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Update ECS Task Definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: team-01-ecr
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Update ECS Service
         run: |
           aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} \
             --service ${{ env.ECS_SERVICE }} \
-            --force-new-deployment \
-            --image ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            --task-definition ${{ steps.task-def.outputs.task-definition }} \
+            --desired-count 1
 
       - name: Wait for service stability
         run: |

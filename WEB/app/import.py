@@ -6,7 +6,7 @@ from user.models import TestHistory  # 'user'를 실제 앱 이름으로 변경
 import pytz
 
 # Django 환경 초기화
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")  # 'app'을 프로젝트 이름으로 변경
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 django.setup()
 
 utc = pytz.UTC
