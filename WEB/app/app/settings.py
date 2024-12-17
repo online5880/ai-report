@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv("../../web.env")
+load_dotenv("web.env")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ie$zjz69s1dwxgqg2@a3m+kcrq8gl8272@jc7t0*bt7^p_ttan"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("USE_DEBUG")
+DEBUG = os.getenv("USE_DEBUG", "FALSE").upper() == "TRUE"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -147,7 +147,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-USE_S3 = os.getenv("USE_S3")
+USE_S3 = os.getenv("USE_S3", "FALSE").upper() == "TRUE"
 
 if USE_S3:
     # aws settings
