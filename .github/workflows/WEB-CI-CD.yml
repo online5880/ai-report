@@ -90,13 +90,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # ECS 서비스의 기존 작업을 종료 (desired-count 0으로 설정)
+      - name: Stop ECS service tasks (desired-count 0)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --desired-count 0
+
       # ECS Task Definition 다운로드
       - name: Download ECS Task Definition
         run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-            --query taskDefinition \
-            --output json > task-definition.json
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
 
       # ECS Task Definition 업데이트 (새로운 이미지 사용)
       - name: Update ECS Task Definition
@@ -115,6 +121,36 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
+      - name: Restart ECS service tasks (desired-count 1)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --desired-count 1
+
+      - name: Connect to EC2 and deploy Dockerized Django app
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: |
+            # ECR 로그인
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+            # 최신 이미지 pull
+            docker pull ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+            # docker-compose 점진적 무중단 업데이트
+            cd /home/ubuntu/django
+            docker-compose up -d --build django_1
+            docker-compose up -d --build django_2
+            docker-compose up -d --build django_3
+
+
 
 
   notify-slack:
