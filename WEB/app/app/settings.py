@@ -10,22 +10,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("USE_DEBUG", "FALSE").upper() == "TRUE"
+USE_DEBUG = os.getenv("USE_DEBUG", "False").strip().lower() == "true"
+DEBUG = USE_DEBUG
 
 ALLOWED_HOSTS = ["*"]
-
 
 SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = None
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://15.165.31.54",  # 서버 IP
-    "http://mane.my",  # 메인 도메인
-    "http://*.mane.my",  # 서브도메인
-]
 
 # Application definition
 INSTALLED_APPS = [
