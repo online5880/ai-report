@@ -10,5 +10,5 @@ urlpatterns = [
         name="streaming-daily-report",
     ),
     path("report/<uuid:user_id>/<str:date>/", views.view_report, name="view_report"),
-    path("neo4j/", views.neo4j_view, name="neo4j"),
+    path("report/neo4j/", views.neo4j_view, name="neo4j"),
 ]
