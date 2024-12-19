@@ -61,11 +61,24 @@ def calendar_view(request, user_id):
         "cre_date", flat=True
     )
     dates = [date.date() for date in dates]  # 날짜만 추출
-    months = range(1, 13)  # 1월~12월
+
+    # 리포트가 존재하는 날짜들 조회
+    report_dates = DailyReport.objects.filter(user_id=user_id).values_list(
+        "date", flat=True
+    )
+    report_dates = [date.strftime("%Y-%m-%d") for date in report_dates]  # 문자열 형식으로 변환
+
+    months = range(1, 13)
+
     return render(
         request,
         "report/calendar.html",
-        {"user_id": user_id, "dates": list(set(dates)), "months": months},
+        {
+            "user_id": user_id,
+            "dates": list(set(dates)),
+            "months": months,
+            "report_dates": report_dates,
+        },
     )
 
 
@@ -138,22 +151,26 @@ class StreamingDailyReportAPI(APIView):
         chain = RunnablePassthrough() | llm | StrOutputParser()
 
         report_content = ""
+        try:
+            # 스트리밍 데이터를 하나씩 반환
+            for chunk in chain.stream(prompt):
+                report_content += chunk
+                cleaned_chunk = chunk.replace("data: ", "")  # `data:` 접두어 제거
+                yield cleaned_chunk
 
-        # 스트리밍 데이터를 하나씩 반환
-        for chunk in chain.stream(prompt):
-            report_content += chunk
-            cleaned_chunk = chunk.replace("data: ", "")  # `data:` 접두어 제거
-            yield cleaned_chunk
+            # 리포트를 데이터베이스에 저장
+            if report_content:
+                existing_report = DailyReport.objects.filter(
+                    user_id=user_id, date=date
+                ).first()
+                if not existing_report:
+                    DailyReport.objects.create(
+                        user_id=user_id, date=date, report_content=report_content
+                    )
 
-        # 리포트를 데이터베이스에 저장
-        if report_content:
-            existing_report = DailyReport.objects.filter(
-                user_id=user_id, date=date
-            ).first()
-            if not existing_report:
-                DailyReport.objects.create(
-                    user_id=user_id, date=date, report_content=report_content
-                )
+        except Exception as e:
+            # 예외 처리: 스트리밍 도중 오류가 발생한 경우
+            yield f"data: 오류 발생: {str(e)}\n\n"
 
     def get(self, request, user_id):
         """
@@ -200,7 +217,7 @@ class StreamingDailyReportAPI(APIView):
         # 학습 기록 조회
         histories = TestHistory.objects.filter(
             user_id=user_id, cre_date__range=(start_date, end_date)
-        )
+        ).values("m_code", "quiz_code", "answer", "correct")
 
         print("SQL Query:", histories.query)  # SQL 쿼리 디버깅
 
@@ -215,8 +232,8 @@ class StreamingDailyReportAPI(APIView):
 
         record_details = "\n".join(
             [
-                f"모듈: {record.m_code}, 퀴즈: {record.quiz_code}, "
-                f"답변: {record.answer}, 정답 여부: {record.correct}"
+                f"모듈: {record['m_code']}, 퀴즈: {record['quiz_code']}, "
+                f"답변: {record['answer']}, 정답 여부: {record['correct']}"
                 for record in histories
             ]
         )
@@ -237,6 +254,9 @@ class StreamingDailyReportAPI(APIView):
         - 학습 성과 분석
         - 개선을 위한 제안
         - 동기부여 메시지
+
+        # 필수
+        초등학생 1,2학년 수준으로 작성하세요.!
         """
 
         # 스트리밍 리포트 반환

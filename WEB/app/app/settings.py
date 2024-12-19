@@ -112,24 +112,54 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media Files
-USE_S3 = os.getenv("USE_S3", "FALSE").upper() == "TRUE"
+USE_S3 = os.getenv("USE_S3", "False").strip().upper() == "TRUE"
 
 if USE_S3:
+    # AWS S3 설정
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    AWS_REGION = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")  # 기본값은 서울 리전
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
     AWS_QUERYSTRING_AUTH = False  # URL 서명 제거
     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}  # 캐시 설정
 
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-else:
-    STATIC_URL = "/staticfiles/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    # STORAGES 설정
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Media 파일 저장소
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Static 파일 저장소
+        },
+    }
 
-MEDIA_URL = "/mediafiles/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+    # Static 및 Media 파일 URL
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+else:
+    # 로컬 개발 환경 설정
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",  # Media 파일 저장소
+            "LOCATION": os.path.join(BASE_DIR, "mediafiles"),
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # Static 파일 저장소
+        },
+    }
+
+    # Static 및 Media 파일 URL
+    STATIC_URL = "/static/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+
+# STATICFILES_DIRS는 항상 사용 (소스 디렉토리)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # 프로젝트 내 정적 파일 경로
+]
+
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

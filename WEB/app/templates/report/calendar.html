@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,64 +9,10 @@
     <!-- FullCalendar CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
 
-    <!-- FullCalendar JS -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
-    <!-- marked.js for Markdown Parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'report/css/styles.css' %}">
 
-    <style>
-        /* 전체 페이지 레이아웃 */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-            gap: 10px;
-        }
-
-        /* 캘린더 영역 */
-        #calendar-container {
-            flex-grow: 1; /* 남은 공간 모두 차지 */
-            overflow: hidden;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        #calendar {
-            height: 100%; /* 부모 높이에 맞게 설정 */
-        }
-
-        /* 일일 리포트 영역 */
-        #llm-response {
-            width: 400px; /* 고정된 너비 */
-            padding: 10px;
-            border-left: 1px solid #ccc;
-            background-color: #f9f9f9;
-            overflow-y: auto;
-            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-            display: block; /* 항상 보이도록 설정 */
-        }
-
-        #llm-response h2 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        #llm-output {
-            white-space: normal;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-    </style>
 </head>
-
 <body>
     <h1 style="padding-left: 10px;">{{ user_id }}의 캘린더</h1>
 
@@ -82,111 +29,40 @@
             <div id="calendar"></div>
         </div>
 
-        <!-- 일일 리포트 -->
-        <div id="llm-response">
-            <h2>일일 리포트</h2>
-            <div id="llm-output">
-                리포트를 확인하려면 날짜를 클릭해주세요.
+        <!-- 모달 추가 -->
+        <div id="reportModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>일일 리포트</h2>
+                <div id="llm-output">
+                    리포트를 확인하려면 날짜를 클릭해주세요.
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
+    <!-- marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom JS -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'ko',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,dayGridWeek,dayGridDay'
-                },
-                events: [
-                    {% for date in dates %}
-                    {
-                        title: '리포트 확인',
-                        start: '{{ date|date:"Y-m-d" }}',
-                        allDay: true,
-                        extendedProps: {
-                            hasReport: true
-                        }
-                    },
-                    {% endfor %}
-                ],
-                eventClick: function(info) {
-                    fetchLLMReport(info.event.startStr);
-                }
-            });
-            calendar.render();
-
-            // 월 이동 기능
-            window.goToMonth = function(month) {
-                var currentYear = new Date().getFullYear();
-                calendar.gotoDate(new Date(currentYear, month, 1));
-            };
-
-            // LLM 리포트 API 호출
-            window.fetchLLMReport = function(date) {
-                const output = document.getElementById('llm-output');
-                output.innerHTML = "불러오는 중...";
-
-                // 서버에서 데이터를 가져오는 함수
-                async function fetchReportStream() {
-                    try {
-                        const response = await fetch(`/api/streaming-daily-report/{{ user_id }}/?date=${date}`);
-
-                        // 오류 응답 처리
-                        if (!response.ok) {
-                            throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
-                        }
-
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder("utf-8");
-
-                        let accumulatedText = ""; // 전체 데이터를 누적 저장
-                        let chunkBuffer = "";     // 실시간으로 처리할 버퍼
-
-                        while (true) {
-                            const { value, done } = await reader.read();
-                            if (done) {
-                                break; // 스트림 끝
-                            }
-
-                            // 청크 데이터 처리
-                            const chunk = decoder.decode(value, { stream: true });
-                            chunkBuffer += chunk;
-
-                            // 누적 텍스트에 추가
-                            accumulatedText += chunkBuffer;
-
-                            // 화면 업데이트 최적화: 한번에 처리된 청크로만 갱신
-                            updateOutput(output, accumulatedText);
-
-                            chunkBuffer = ""; // 버퍼 초기화
-                        }
-
-                        // 최종 완료 메시지
-                        output.innerHTML = marked.parse(accumulatedText);
-
-                    } catch (error) {
-                        console.error("스트리밍 오류:", error);
-                        output.innerHTML = `<p style="color:red;">오류 발생: ${error.message}</p>`;
+        const calendarEvents = [
+            {% for date in dates %}
+                {
+                    title: {% if date|date:"Y-m-d" in report_dates %}'리포트 보기'{% else %}'리포트 생성'{% endif %},
+                    start: '{{ date|date:"Y-m-d" }}',
+                    allDay: true,
+                    extendedProps: {
+                        hasReport: {% if date|date:"Y-m-d" in report_dates %}true{% else %}false{% endif %}
                     }
-                }
-
-                // 화면에 데이터를 표시하는 함수
-                function updateOutput(element, content) {
-                    requestAnimationFrame(() => {
-                        element.innerHTML = marked.parse(content);
-                    });
-                }
-
-                // 스트리밍 함수 실행
-                fetchReportStream();
-            };
-
-        });
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        const userId = "{{ user_id }}";
     </script>
+    <script src="{% static 'report/js/scripts.js' %}"></script>
+
 </body>
 </html>
