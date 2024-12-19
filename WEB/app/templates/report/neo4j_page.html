@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neo4j Graph with Learning Rate</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .node circle {
+            stroke: #555;
+            stroke-width: 1.5px;
+            cursor: grab; /* 드래그 가능한 표시 */
+        }
+        .node text {
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            pointer-events: none;
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Neo4j Graph with Learning Rate</h1>
+    <svg width="800" height="600" style="border: 1px solid black;"></svg>
+
+    <script>
+        // Django에서 전달된 graph_data를 JavaScript 객체로 변환
+        const graphData = JSON.parse('{{ graph_data|escapejs }}');
+
+        // 각 노드에 학습률을 추가 (임의로 설정)
+        graphData.nodes.forEach(node => {
+            node.learningRate = Math.random(); // 학습률을 0~1 사이의 값으로 설정
+        });
+
+        // SVG와 그룹(g) 요소 생성
+        const width = 800;
+        const height = 600;
+        const svg = d3.select("svg");
+        const g = svg.append("g");
+
+        // 학습률에 따른 색상 스케일 설정
+        const colorScale = d3.scaleLinear()
+            .domain([0, 1]) // 학습률 범위
+            .range(["red", "green"]); // 색상 범위: 낮은 학습률은 빨간색, 높은 학습률은 초록색
+
+        // D3 줌/이동 설정
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 5])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom);
+
+        // D3 시뮬레이션 설정
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        // 링크(관계) 그리기
+        const link = g.selectAll(".link")
+            .data(graphData.links)
+            .enter()
+            .append("line")
+            .attr("class", "link");
+
+        // 노드 그리기
+        const node = g.selectAll(".node")
+            .data(graphData.nodes)
+            .enter()
+            .append("g")
+            .attr("class", "node")
+            .call(
+                d3.drag() // 드래그 이벤트 추가
+                    .on("start", dragStarted)
+                    .on("drag", dragged)
+                    .on("end", dragEnded)
+            );
+
+        node.append("circle")
+            .attr("r", 10)
+            .attr("fill", d => colorScale(d.learningRate)); // 학습률에 따른 색상 설정
+
+        node.append("text")
+            .text(d => d.name)  // 노드 이름 표시
+            .attr("dy", -15);
+
+        // 학습률 값 표시
+        node.append("text")
+            .text(d => `학습률: ${(d.learningRate * 100).toFixed(1)}%`) // 학습률 값 표시
+            .attr("dy", 20) // 노드 아래로 위치 조정
+            .attr("dx", -30); // 텍스트 위치를 중앙으로 정렬
+
+        // 시뮬레이션 업데이트
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+
+        // 드래그 이벤트 핸들러
+        function dragStarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x; // 고정 x값
+            d.fy = d.y; // 고정 y값
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x; // 드래그 동안의 x값
+            d.fy = event.y; // 드래그 동안의 y값
+        }
+
+        function dragEnded(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null; // 고정 해제
+            d.fy = null; // 고정 해제
+        }
+    </script>
+</body>
+</html>

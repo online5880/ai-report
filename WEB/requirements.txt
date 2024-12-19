@@ -66,3 +66,4 @@ urllib3==1.26.20
 yarl==1.15.2
 gunicorn
 django-cors-headers
+neo4j

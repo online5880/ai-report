@@ -13,14 +13,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("USE_DEBUG", "FALSE").upper() == "TRUE"
 
-ALLOWED_HOSTS = [
-    "15.165.31.54",  # 서버 IP 주소
-    "mane.my",  # 메인 도메인
-    ".mane.my",  # 서브도메인 허용
-    "127.0.0.1",
-    "localhost",
-    "0.0.0.0",
-]
+ALLOWED_HOSTS = ["*"]
+
 
 SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = None
@@ -48,6 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "channels",
     "corsheaders",
+    "neo4j",
 ]
 
 MIDDLEWARE = [

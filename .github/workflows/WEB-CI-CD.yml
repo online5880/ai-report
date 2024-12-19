@@ -147,8 +147,11 @@ jobs:
             # docker-compose 점진적 무중단 업데이트
             cd /home/ubuntu/django
             docker-compose up -d --build django_1
+            sleep 5
             docker-compose up -d --build django_2
+            sleep 5
             docker-compose up -d --build django_3
+            sleep 5
 
 
 
