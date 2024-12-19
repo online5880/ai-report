@@ -251,9 +251,9 @@ class StreamingDailyReportAPI(APIView):
 # ==========================================
 
 # Neo4j 연결 설정
-uri = "bolt://host.docker.internal:7687"
-username = "neo4j"
-password = "bigdata9-"
+uri = os.getenv("NEO4J_BOLT_URI")
+username = os.getenv("NEO4J_USERNAME")
+password = os.getenv("NEO4J_PASSWORD")
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
