@@ -1,64 +1,84 @@
+/* 기본 스타일 */
 body, html {
     margin: 0;
     padding: 0;
-    height: 100%;
+    height: 100%; /* 화면 전체 높이 */
     box-sizing: border-box;
-}
-
-.container {
     display: flex;
-    height: 100vh;
-    gap: 10px;
+    flex-direction: column; /* 세로 정렬 */
 }
 
+/* 컨테이너 설정 */
+.container {
+    flex-grow: 1; /* 남은 공간을 채움 */
+    display: flex;
+    flex-direction: column; /* 세로 방향 정렬 */
+    gap: 10px;
+    height: 100%; /* 부모의 전체 높이를 채움 */
+}
+
+/* 캘린더 컨테이너 */
 #calendar-container {
-    flex-grow: 1;
-    overflow: hidden;
+    flex-grow: 1; /* 남은 공간을 모두 사용 */
+    overflow: hidden !important;
     padding: 10px;
     box-sizing: border-box;
-    aspect-ratio: 16/10;
+    aspect-ratio: 16/10; /* 캘린더 비율 설정 */
     max-width: 90%;
     margin: 0 auto;
 }
 
 #calendar {
-    height: 100%;
+    height: 100%; /* 부모 높이를 꽉 채움 */
     width: 100%;
 }
 
+/* 모달 배경 */
 .modal {
-    display: none;
+    display: none; /* 기본적으로 숨김 */
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.7); /* 배경을 어둡게 */
+    z-index: 9999; /* 화면 위에 나타나게 */
+    overflow: hidden; /* 스크롤을 없애기 위해 */
 }
 
+/* 모달 컨텐츠 */
 .modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 70%;
-    max-width: 800px;
-    border-radius: 5px;
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    max-height: 70vh;
-    overflow-y: auto;
+    width: 80%; /* 너비 */
+    height: 80%; /* 높이 */
+    transform: translate(-50%, -50%); /* 화면 중앙으로 배치 */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2열 */
+    grid-template-rows: repeat(2, 1fr); /* 2행 */
+    gap: 10px; /* 그리드 사이 간격 */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
+/* 그리드 영역 */
+.modal-content > div {
+    padding: 10px;
+    border: 1px solid #ccc;
+    overflow-y: auto; /* 내용이 많을 경우 스크롤 */
+    border-radius: 4px;
+}
+
+/* 닫기 버튼 */
 .close {
-    color: #aaa;
     position: absolute;
     top: 10px;
-    right: 15px;
-    font-size: 28px;
+    right: 10px;
+    font-size: 30px;
     font-weight: bold;
     cursor: pointer;
 }
@@ -68,4 +88,162 @@ body, html {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+#chatbot {
+    display: none; /* 초기에는 닫혀 있음 */
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 300px;
+    height: 400px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    flex-direction: column;
+    z-index: 9999;
+}
+
+#chatbot-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+#chatbot-messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+#chatbot-input {
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    display: flex;
+}
+
+#chatbot-input input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#chatbot-input button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+#chatbot-input button:hover {
+    background-color: #0056b3;
+}
+
+/* 날짜 셀 자체의 높이와 패딩 조정 */
+.fc-daygrid-day {
+    height: 150px !important;
+    padding: 0 !important;
+}
+
+/* 날짜 셀의 내부 프레임 설정 */
+.fc-daygrid-day-frame {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 4px !important;  /* 셀 내부 패딩 추가 */
+}
+
+/* 이벤트를 감싸는 컨테이너 */
+.fc-daygrid-day-events {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 4px !important;  /* 이벤트 주변 패딩 */
+}
+
+/* 개별 이벤트 스타일 */
+.fc-daygrid-event-harness {
+    height: calc(100% - 8px) !important;  /* 패딩을 고려한 높이 조정 */
+    margin: 4px !important;  /* 이벤트 주변 여백 */
+}
+
+/* 이벤트 내용 스타일 */
+.fc-daygrid-event {
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 8px !important;  /* 모서리 둥글게 */
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* 약간의 그림자 효과 */
+}
+
+/* 날짜 숫자 위치 조정 */
+.fc-daygrid-day-top {
+    padding: 4px !important;
+}
+
+/* FullCalendar의 스크롤 제거 */
+/* .fc-scroller {
+    overflow: hidden !important;
+} */
+
+/* 날짜 영역의 스크롤도 제거 */
+.fc-daygrid-body {
+    overflow: hidden !important;
+}
+
+.has-report {
+    background-color: #66bb6a !important; /* 부드러운 연두색 */
+    border: none !important; /* 테두리 제거 */
+    color: white;
+    border-radius: 4px; /* 살짝 둥근 모서리 추가 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 약간의 그림자 */
+    display: flex; /* 플렉스 박스 사용 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    text-align: center; /* 텍스트 중앙 정렬 */
+    height: 100%; /* 이벤트 높이를 100%로 설정 */
+    padding: 0; /* 패딩 제거 */
+}
+
+.no-report {
+    background-color: #42a5f5 !important; /* 부드러운 스카이블루 */
+    border: none !important; /* 테두리 제거 */
+    color: white;
+    border-radius: 4px; /* 살짝 둥근 모서리 추가 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 약간의 그림자 */
+    display: flex; /* 플렉스 박스 사용 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    text-align: center; /* 텍스트 중앙 정렬 */
+    height: 100%; /* 이벤트 높이를 100%로 설정 */
+    padding: 0; /* 패딩 제거 */
+}
+
+#month-selector {
+    display: flex;
+    justify-content: center; /* 버튼을 가로로 중앙 정렬 */
+    flex-wrap: wrap; /* 버튼이 화면에 넘칠 경우 다음 줄로 감싸기 */
+    margin-bottom: 10px; /* 캘린더와 간격 */
+}
+
+#month-selector button {
+    margin: 5px;
+    padding: 8px 15px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#month-selector button:hover {
+    background-color: #0056b3;
 }

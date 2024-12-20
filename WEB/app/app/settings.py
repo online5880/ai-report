@@ -112,7 +112,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media Files
-USE_S3 = os.getenv("USE_S3", "False").strip().upper() == "TRUE"
+USE_S3 = os.getenv("USE_S3", "False").strip().upper() == "True"
+print(USE_S3)
 
 if USE_S3:
     # AWS S3 설정
