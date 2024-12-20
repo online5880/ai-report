@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from distutils.util import strtobool
+
 
 load_dotenv("web.env")  # 환경 변수 로드
 
@@ -10,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-USE_DEBUG = os.getenv("USE_DEBUG", "False").strip().lower() == "true"
+USE_DEBUG = bool(strtobool(os.getenv("USE_DEBUG", "False")))
 DEBUG = USE_DEBUG
 
 ALLOWED_HOSTS = ["*"]
@@ -112,7 +114,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media Files
-USE_S3 = os.getenv("USE_S3", "False").strip().upper() == "True"
+USE_S3 = bool(strtobool(os.getenv("USE_DEBUG", "False")))
+print(os.getenv("USE_DEBUG"))
 print(USE_S3)
 
 if USE_S3:
