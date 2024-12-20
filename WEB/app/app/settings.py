@@ -114,9 +114,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media Files
-USE_S3 = bool(strtobool(os.getenv("USE_DEBUG", "False")))
-print(os.getenv("USE_DEBUG"))
-print(USE_S3)
+USE_S3 = bool(strtobool(os.getenv("USE_S3", "True")))
+print("USE S3 : ", USE_S3)
 
 if USE_S3:
     # AWS S3 설정
