@@ -16,7 +16,5 @@ COPY requirements.txt /app/
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python manage.py collectstatic --noinput
-
 # Django 애플리케이션 실행 (Gunicorn 사용)
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app.wsgi:application"]
