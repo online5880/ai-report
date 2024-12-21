@@ -147,4 +147,30 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    // Chart.js 사용 예제
+    const ctx = document.getElementById('accuracy-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['월', '화', '수', '목', '금'],
+            datasets: [{
+                label: '정답률 (%)',
+                data: [85, 90, 87, 92, 88], // 예시 데이터
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
 });

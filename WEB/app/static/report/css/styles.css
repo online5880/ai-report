@@ -28,6 +28,14 @@ body, html {
     margin: 0 auto;
 }
 
+#additional-info div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+
 #calendar {
     height: 100%; /* 부모 높이를 꽉 채움 */
     width: 100%;
