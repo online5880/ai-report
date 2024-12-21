@@ -271,9 +271,28 @@ class StreamingDailyReportAPI(APIView):
 # ==========================================
 
 # Neo4j 연결 설정
-uri = os.getenv("NEO4J_BOLT_URI")
-username = os.getenv("NEO4J_USERNAME")
-password = os.getenv("NEO4J_PASSWORD")
+def clean_env_var(var):
+    """
+    환경 변수 값에서 큰따옴표와 작은따옴표를 제거합니다.
+
+    Args:
+        var (str): 환경 변수 값.
+
+    Returns:
+        str: 앞뒤의 따옴표가 제거된 환경 변수 값.
+    """
+    if (
+        var
+        and (var.startswith('"') and var.endswith('"'))
+        or (var.startswith("'") and var.endswith("'"))
+    ):
+        return var[1:-1]
+    return var
+
+
+uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
+username = clean_env_var(os.getenv("NEO4J_USERNAME"))
+password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
 print("neo4j : ", uri, username, password)
