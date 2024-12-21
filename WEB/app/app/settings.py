@@ -3,8 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from distutils.util import strtobool
 
-
-load_dotenv("web.env")  # 환경 변수 로드
+load_dotenv()  # 환경 변수 로드
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,6 +14,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 USE_DEBUG = bool(strtobool(os.getenv("USE_DEBUG", "False")))
 DEBUG = USE_DEBUG
 
+print("DEBUG : ", DEBUG)
 ALLOWED_HOSTS = ["*"]
 
 SECURE_SSL_REDIRECT = False

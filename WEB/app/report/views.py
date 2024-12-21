@@ -276,6 +276,8 @@ username = os.getenv("NEO4J_USERNAME")
 password = os.getenv("NEO4J_PASSWORD")
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
+print("neo4j : ", uri, username, password)
+
 
 def get_graph_data():
     """
