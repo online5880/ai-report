@@ -8,6 +8,11 @@ load_dotenv()  # 환경 변수 로드
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
@@ -172,5 +177,46 @@ ASGI_APPLICATION = "app.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
+# LOGGING 설정 추가
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "DEBUG",  # 로그 레벨
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs/report.log"),  # report 앱의 로그 파일
+            "formatter": "verbose",  # 사용할 포매터 지정
+        },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],  # Django 기본 로그는 콘솔에 출력
+            "level": "INFO",  # INFO 이상만 기록
+            "propagate": True,
+        },
+        "report": {  # report 앱에 대한 로거
+            "handlers": ["file"],  # report 앱의 로그는 파일에 저장
+            "level": "DEBUG",  # DEBUG 이상 로그 기록
+            "propagate": False,  # 상위 로거로 전달하지 않음
+        },
     },
 }
