@@ -14,4 +14,4 @@ COPY ./app /code/app
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000"]
 
 # If running behind a proxy like Nginx or Traefik add --proxy-headers
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000", "--proxy-headers"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8100", "--proxy-headers"]
