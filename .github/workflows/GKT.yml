@@ -7,6 +7,7 @@ on:
 env:
   ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com  # ECR 레지스트리
   ECR_REPOSITORY: bigdata/team-01/gkt-api  # ECR 저장소 이름
+  AWS_REGION: ap-northeast-2  # AWS 리전
 
 jobs:
   build:
