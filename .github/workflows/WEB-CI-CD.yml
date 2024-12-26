@@ -126,7 +126,7 @@ jobs:
             sleep 10
 
   notify-slack:
-    needs: [build, push-to-ecr, deploy-to-ecs]
+    needs: [build-and-save, push-to-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -135,7 +135,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ needs.build.result }}" == "failure" ]]; then
+          if [[ "${{ needs.build-and-save.result }}" == "failure" ]]; then
             STATUS="❌ 빌드 및 테스트 실패"
             COLOR="#ff0000"
           elif [[ "${{ needs.push-to-ecr.result }}" == "failure" ]]; then
