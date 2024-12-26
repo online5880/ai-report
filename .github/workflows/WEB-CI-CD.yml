@@ -3,134 +3,118 @@ name: Django CI/CD with Slack Notification
 on:
   push:
     branches:
-      - dev/web  # dev/web 브랜치로 푸시될 때 실행
+      - dev/web
 
 env:
-  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com  # ECR 레지스트리
-  ECR_REPOSITORY: bigdata/team-01  # ECR 저장소 이름
-  AWS_REGION: ap-northeast-2  # AWS 리전
-  ECS_CLUSTER: team-01-ecs  # ECS 클러스터
-  ECS_SERVICE: ecs-service  # ECS 서비스
-  ECS_TASK_DEFINITION: ecs-task  # ECS 작업 정의
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  # Slack 웹훅 URL
+  ECS_TASK_DEFINITION: ecs-task
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: 레포지토리 체크아웃
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 도커 buildx 설치
         uses: docker/setup-buildx-action@v2
-        with:
-          buildkit-inline-cache: true
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build Docker Image (for test)
+      - name: 도커 이미지 빌드
         run: |
-          docker build -t ai-report-web:latest -f WEB/Dockerfile WEB
+          docker buildx build --platform linux/amd64 -t ai-report-web:latest -f WEB/Dockerfile WEB
           docker images
 
-      - name: Create env file dynamically
-        run: |
-          echo "SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" > WEB/web.env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> WEB/web.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> WEB/web.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> WEB/web.env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> WEB/web.env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> WEB/web.env
-        shell: bash
+      - name: 도커 이미지 저장
+        run: docker save ai-report-web:latest > ./ai-report-web.tar
 
-      - name: Cleanup Docker Container
-        if: always()
+      - name: 도커 이미지 업로드(아티팩트)
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: ./ai-report-web.tar
+
+      - name: 기본 테스트
         run: |
-          docker rm -f ai-report-test || true
+          # 기본적인 테스트 추가
+          docker run --rm ai-report-web:latest python manage.py test
 
   push-to-ecr:
-    needs: build-and-test
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: 도커 이미지 다운로드(아티팩트)
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
 
-      - name: Configure AWS credentials
+      - name: 도커 이미지 불러오기(아티팩트)
+        run: docker load < ./ai-report-web.tar
+
+      - name: AWS Credential 인증
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build and Push to ECR
-        uses: docker/build-push-action@v5
-        with:
-          context: WEB
-          file: WEB/Dockerfile
-          push: true
-          tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+      - name: Amazon ECR 로그인 및 이미지 푸시
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+          docker tag ai-report-web:latest ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+          docker tag ai-report-web:latest ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
   deploy-to-ecs:
     needs: push-to-ecr
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS credentials
+      - name: AWS Credential 인증
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # ECS 서비스의 기존 작업을 종료 (desired-count 0으로 설정)
-      - name: Stop ECS service tasks (desired-count 0)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --desired-count 0
-
-      # ECS Task Definition 다운로드
-      - name: Download ECS Task Definition
+      - name: ECS Task 다운로드
         run: |
           aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query taskDefinition > task-definition.json
 
-      # ECS Task Definition 업데이트 (새로운 이미지 사용)
-      - name: Update ECS Task Definition
+      - name: ECS Task 업데이트
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: team-01-ecr
-          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          image: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      # ECS 서비스에 새로운 작업 배포
-      - name: Deploy to ECS
+      - name: Store current task definition for rollback
+        run: |
+          aws ecs describe-services \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --services ${{ secrets.ECS_SERVICE }} \
+            --query 'services[0].taskDefinition' \
+            --output text > previous-task-def.txt
+
+      - name: ECS 배포
+        id: deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true
 
-      # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
-      - name: Restart ECS service tasks (desired-count 1)
+      - name: 실패 시 롤백
+        if: failure()
         run: |
           aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --service ${{ env.ECS_SERVICE }} \
-            --desired-count 1
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --task-definition $(cat previous-task-def.txt) \
+            --force-new-deployment
 
-      - name: Connect to EC2 and deploy Dockerized Django app
+      - name: EC2에 연결하고 Dockerized Django 앱 배포
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -138,32 +122,28 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
-            # ECR 로그인
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
-
-            # 최신 이미지 pull
-            docker pull ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-
-            # docker-compose 점진적 무중단 업데이트
-            cd /home/ubuntu/django
-            docker-compose up -d --build django_1
-            sleep 5
-            docker-compose up -d --build django_2
-            sleep 5
-            docker-compose up -d --build django_3
-            sleep 5
-
-
-
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            docker pull ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+                      
+            docker-compose pull
+            docker-compose up -d --no-deps --build django_1
+            sleep 10
+            docker-compose up -d --no-deps --build django_2
+            sleep 10
+            docker-compose up -d --no-deps --build django_3
+            sleep 10
 
   notify-slack:
-    needs: [build-and-test, push-to-ecr, deploy-to-ecs]
+    needs: [build, push-to-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
-    if: always()  # 항상 실행
+    if: always()
     steps:
       - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
+          if [[ "${{ needs.build.result }}" == "failure" ]]; then
             STATUS="❌ 빌드 및 테스트 실패"
             COLOR="#ff0000"
           elif [[ "${{ needs.push-to-ecr.result }}" == "failure" ]]; then
@@ -199,11 +179,11 @@ jobs:
                       },
                       {
                         \"type\": \"mrkdwn\",
-                        \"text\": \"*🛠️ 브랜치:*\n\`${{ github.ref_name }}\`\"
+                        \"text\": \"*🛠️ 브랜치:*\n\`${GITHUB_REF_NAME}\`\"
                       }
                     ]
                   }
                 ]
               }
             ]
-          }" ${{ secrets.SLACK_WEBHOOK_URL }}
+          }" $SLACK_WEBHOOK_URL
