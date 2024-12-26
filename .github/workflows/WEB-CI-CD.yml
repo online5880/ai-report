@@ -86,6 +86,13 @@ jobs:
             --query 'services[0].taskDefinition' \
             --output text > previous-task-def.txt
 
+      - name: ECS 서비스의 기존 작업을 종료 (desired-count 0으로 설정)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --desired-count 0
+
       - name: ECS 배포
         id: deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -94,6 +101,14 @@ jobs:
           service: ${{ secrets.ECS_SERVICE }}
           cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true
+  
+      # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
+      - name: Restart ECS service tasks (desired-count 1)
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --desired-count 1
 
       - name: 실패 시 롤백
         if: failure()
