@@ -21,6 +21,12 @@ jobs:
       - name: 도커 이미지 저장
         run: docker save ai-report-web:latest > ./ai-report-web.tar
 
+      - name: 도커 이미지 업로드(아티팩트)
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: ./ai-report-web.tar
+
   push-to-ecr:
     needs: build-and-save
     runs-on: ubuntu-latest
