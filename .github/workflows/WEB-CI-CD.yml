@@ -9,7 +9,7 @@ env:
   ECS_TASK_DEFINITION: ecs-task
 
 jobs:
-  build-and-save:
+  build-and-push-ecr:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,27 +17,6 @@ jobs:
 
       - name: 도커 이미지 빌드
         run: docker build -t ai-report-web:latest -f ./WEB/Dockerfile ./WEB
-
-      - name: 도커 이미지 저장
-        run: docker save ai-report-web:latest > ./ai-report-web.tar
-
-      - name: 도커 이미지 업로드(아티팩트)
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-image
-          path: ./ai-report-web.tar
-
-  push-to-ecr:
-    needs: build-and-save
-    runs-on: ubuntu-latest
-    steps:
-      - name: 도커 이미지 다운로드(아티팩트)
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-image
-
-      - name: 도커 이미지 불러오기(아티팩트)
-        run: docker load < ./ai-report-web.tar
 
       - name: AWS Credential 인증
         uses: aws-actions/configure-aws-credentials@v1
@@ -55,7 +34,7 @@ jobs:
           docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
   deploy-to-ecs:
-    needs: push-to-ecr
+    needs: build-and-push-ecr
     runs-on: ubuntu-latest
     steps:
       - name: AWS Credential 인증
@@ -101,7 +80,7 @@ jobs:
           service: ${{ secrets.ECS_SERVICE }}
           cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true
-  
+
       # ECS 서비스의 작업을 다시 시작 (desired-count를 원래 값으로 복원)
       - name: Restart ECS service tasks (desired-count 1)
         run: |
@@ -129,7 +108,7 @@ jobs:
           script: |
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
             docker pull ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-                      
+
             docker-compose pull
             docker-compose up -d --no-deps --build django_1
             sleep 10
@@ -139,7 +118,7 @@ jobs:
             sleep 10
 
   notify-slack:
-    needs: [build-and-save, push-to-ecr, deploy-to-ecs]
+    needs: [build-and-push-ecr, deploy-to-ecs]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -148,11 +127,8 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "${{ needs.build-and-save.result }}" == "failure" ]]; then
-            STATUS="❌ 빌드 및 테스트 실패"
-            COLOR="#ff0000"
-          elif [[ "${{ needs.push-to-ecr.result }}" == "failure" ]]; then
-            STATUS="❌ ECR 푸시 실패"
+          if [[ "${{ needs.build-and-push-ecr.result }}" == "failure" ]]; then
+            STATUS="❌ 빌드 및 ECR 푸시"
             COLOR="#ff0000"
           elif [[ "${{ needs.deploy-to-ecs.result }}" == "failure" ]]; then
             STATUS="❌ ECS 배포 실패"

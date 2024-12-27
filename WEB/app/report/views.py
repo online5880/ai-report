@@ -1,5 +1,5 @@
 import os
-from django.http import StreamingHttpResponse, Http404
+from django.http import StreamingHttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.timezone import now, make_aware, utc
 
@@ -254,9 +254,10 @@ class StreamingDailyReportAPI(APIView):
         - 학습 성과 분석
         - 개선을 위한 제안
         - 동기부여 메시지
+        - 학습이 부족한 코드명만 출력
 
         # 필수
-        초등학생 1,2학년 수준으로 작성하세요.!
+        초등학생 1,2학년 수준으로 작성하세요.! 150자 이내로 작성하세요.
         """
 
         # 스트리밍 리포트 반환
@@ -269,6 +270,7 @@ class StreamingDailyReportAPI(APIView):
 # ==========================================
 # Neo4j 관련 함수 및 뷰
 # ==========================================
+
 
 # Neo4j 연결 설정
 def clean_env_var(var):
@@ -293,7 +295,9 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
+# driver = GraphDatabase.driver(uri, auth=(username, "1234qwer"))
 driver = GraphDatabase.driver(uri, auth=(username, password))
+
 
 print("neo4j : ", uri, username, password)
 
@@ -301,45 +305,54 @@ print("neo4j : ", uri, username, password)
 def get_graph_data():
     """
     Neo4j에서 그래프 데이터를 조회합니다.
-    - 노드와 관계 데이터를 가져와 JSON 형식으로 반환.
-
-    Returns:
-        dict: 노드와 관계 데이터를 포함하는 JSON 객체.
     """
     with driver.session() as session:
-        query = "MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 50"
+        query = "MATCH (n)-[r]->(m) RETURN n, r, m"
         result = session.run(query)
 
         nodes = []
         links = []
+        node_ids = set()
 
         for record in result:
             n = record["n"]
             m = record["m"]
             r = record["r"]
 
-            # 노드 데이터 추가
-            if n.id not in [node["id"] for node in nodes]:
+            # 노드 추가 (시작 노드)
+            if n.id not in node_ids:
                 nodes.append(
                     {
                         "id": n.id,
-                        "label": list(n.labels)[0] if n.labels else None,
-                        "name": n.get("id", "Unknown"),
-                        "properties": dict(n),
+                        "label": n.get("label", "Unknown"),
+                        "color": n.get("color", "#999"),
+                        "properties": {"id": n.get("id"), "label": n.get("label")},
                     }
                 )
-            if m.id not in [node["id"] for node in nodes]:
+                node_ids.add(n.id)
+
+            # 노드 추가 (끝 노드)
+            if m.id not in node_ids:
                 nodes.append(
                     {
                         "id": m.id,
-                        "label": list(m.labels)[0] if m.labels else None,
-                        "name": m.get("id", "Unknown"),
-                        "properties": dict(m),
+                        "label": m.get("label", "Unknown"),
+                        "color": m.get("color", "#999"),
+                        "properties": {"id": m.get("id"), "label": m.get("label")},
                     }
                 )
+                node_ids.add(m.id)
 
             # 관계 데이터 추가
-            links.append({"source": n.id, "target": m.id, "type": r.type})
+            links.append(
+                {
+                    "source": n.id,
+                    "target": m.id,
+                    "type": r.type,
+                    "color": r.get("color", "#999"),
+                    "title": r.get("title", ""),
+                }
+            )
 
         return {"nodes": nodes, "links": links}
 
@@ -358,3 +371,16 @@ def neo4j_view(request):
     return render(
         request, "report/neo4j_page.html", {"graph_data": json.dumps(graph_data)}
     )
+
+
+class KnowledgeGraphAPI(APIView):
+    def get(self, request):
+        try:
+            graph_data = get_graph_data()
+            return JsonResponse(graph_data)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+
+def graph_view(request):
+    return render(request, "report/graph.html")

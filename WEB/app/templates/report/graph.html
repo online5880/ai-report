@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigma.js with Search Feature</title>
+    <script src="https://cdn.jsdelivr.net/npm/neo4j-driver"></script>
+    <script src="https://cdn.jsdelivr.net/npm/graphology/dist/graphology.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sigma/build/sigma.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #sigma-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+        #search-container {
+            margin: 10px 0;
+        }
+        #search-container input {
+            width: 300px;
+            padding: 5px;
+        }
+        #search-container button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sigma.js Graph with Search</h1>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Enter node label to search..." />
+        <button id="search-button">Search</button>
+    </div>
+    <div id="sigma-container"></div>
+
+    <script>
+        const uri = "bolt://localhost:7687"; // Neo4j Bolt URI
+        const user = "neo4j"; // 사용자 이름
+        const password = "1234qwer"; // 비밀번호
+
+        const driver = neo4j.driver(uri, neo4j.auth.basic(user, password));
+
+        async function fetchGraphData() {
+            const session = driver.session();
+            try {
+                const result = await session.run(`
+                    MATCH (n)-[r]->(m)
+                    RETURN n, m, r
+                `);
+
+                const graph = new graphology.Graph();
+
+                result.records.forEach(record => {
+                    const source = record.get("n").properties.id || record.get("n").identity.low;
+                    const target = record.get("m").properties.id || record.get("m").identity.low;
+                    const sourceLabel = record.get("n").properties.label || source;
+                    const targetLabel = record.get("m").properties.label || target;
+
+                    if (!graph.hasNode(source)) {
+                        graph.addNode(source, {
+                            label: sourceLabel,
+                            x: Math.random() * 10,
+                            y: Math.random() * 10,
+                            size: 10,
+                            color: "#1f77b4"
+                        });
+                    }
+                    if (!graph.hasNode(target)) {
+                        graph.addNode(target, {
+                            label: targetLabel,
+                            x: Math.random() * 10,
+                            y: Math.random() * 10,
+                            size: 10,
+                            color: "#ff7f0e"
+                        });
+                    }
+
+                    if (!graph.hasEdge(source, target)) {
+                        graph.addEdge(source, target, {
+                            size: 2,
+                            color: "#cccccc"
+                        });
+                    }
+                });
+
+                return graph;
+            } finally {
+                await session.close();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            const container = document.getElementById("sigma-container");
+            const searchInput = document.getElementById("search-input");
+            const searchButton = document.getElementById("search-button");
+
+            const graph = await fetchGraphData();
+            const renderer = new Sigma(graph, container, {
+                defaultNodeType: "circle",
+            });
+
+            // 검색 기능
+            searchButton.addEventListener("click", () => {
+                const searchTerm = searchInput.value.trim();
+                if (!searchTerm) return;
+
+                let foundNode = null;
+                graph.forEachNode((node, attributes) => {
+                    if (attributes.label === searchTerm) {
+                        foundNode = { node, attributes };
+                    }
+                });
+
+                if (foundNode) {
+                    console.log("Node found:", foundNode);
+
+                    // 강조 표시
+                    graph.updateNodeAttribute(foundNode.node, "color", () => "#ff0000");
+
+                    // 화면 이동
+                    renderer.getCamera().animate({
+                        x: foundNode.attributes.x,
+                        y: foundNode.attributes.y,
+                        ratio: 0.1, // 줌 비율
+                    }, {
+                        duration: 500,
+                    });
+                } else {
+                    alert("Node not found!");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
