@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "channels",
     "corsheaders",
     "neo4j",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -219,4 +220,10 @@ LOGGING = {
             "propagate": False,  # 상위 로거로 전달하지 않음
         },
     },
+}
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    }
 }

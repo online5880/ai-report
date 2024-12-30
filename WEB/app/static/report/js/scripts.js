@@ -7,9 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
             left: "prev,next today",
             center: "title",
             right: "dayGridMonth,dayGridWeek,dayGridDay",
-            // dayMaxEvents: 1, // 하루에 표시할 최대 이벤트 수
-            eventDisplay: 'block', // 이벤트를 블록 형태로 표시
-            height: 'auto', // 캘린더 높이 자동 조정
+            eventDisplay: 'block',
+            height: 'auto',
         },
         events: calendarEvents,
 
@@ -17,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetchLLMReport(info.event.startStr);
         },
         eventDidMount: function(info) {
-            console.log('Event props:', info.event.extendedProps); // 디버깅용
+            console.log('Event props:', info.event.extendedProps);
 
             if (info.event.extendedProps.hasReport === true) {
                 info.el.classList.add('has-report');
@@ -27,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 info.el.classList.remove('has-report');
             }
         },
-
     });
     calendar.render();
 
@@ -41,12 +39,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("reportModal");
     const span = document.getElementsByClassName("close")[0];
 
+    let abortController = null; // AbortController 인스턴스 저장
+
     span.onclick = function () {
+        if (abortController) {
+            abortController.abort(); // 요청 취소
+        }
         modal.style.display = "none";
     };
 
     window.onclick = function (event) {
         if (event.target == modal) {
+            if (abortController) {
+                abortController.abort(); // 요청 취소
+            }
             modal.style.display = "none";
         }
     };
@@ -59,9 +65,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         modal.style.display = "block";
 
+        // 이전 요청이 있다면 취소
+        if (abortController) {
+            abortController.abort();
+        }
+
+        // 새로운 AbortController 생성
+        abortController = new AbortController();
+
         async function fetchReportStream() {
             try {
-                const response = await fetch(`/api/streaming-daily-report/${userId}/?date=${date}`);
+                const response = await fetch(`/api/streaming-daily-report/${userId}/?date=${date}`, {
+                    signal: abortController.signal // AbortController 신호 전달
+                });
                 if (!response.ok) {
                     throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
                 }
@@ -88,10 +104,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 리포트 내용 업데이트
                 output.innerHTML = marked.parse(accumulatedText);
 
-
             } catch (error) {
-                console.error("스트리밍 오류:", error);
-                output.innerHTML = `<p style="color:red;">오류 발생: ${error.message}</p>`;
+                if (error.name !== 'AbortError') { // AbortError는 무시
+                    console.error("스트리밍 오류:", error);
+                    output.innerHTML = `<p style="color:red;">오류 발생: ${error.message}</p>`;
+                }
+            } finally {
+                abortController = null; // 요청 완료 후 AbortController 초기화
             }
         }
 

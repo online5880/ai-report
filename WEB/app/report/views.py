@@ -16,6 +16,9 @@ from neo4j import GraphDatabase
 import json
 from dotenv import load_dotenv
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 load_dotenv()
 
 
@@ -24,16 +27,11 @@ load_dotenv()
 # ==========================================
 def user_input(request):
     """
-    사용자 입력 페이지
-    - POST 요청 시 입력받은 user_id를 사용하여 캘린더 페이지로 리디렉션.
-    - GET 요청 시 입력 폼 렌더링.
+    사용자 ID 입력을 처리하는 뷰 함수
 
-    Args:
-        request: Django HTTP 요청 객체.
-
-    Returns:
-        - POST: 캘린더 페이지로 리디렉션.
-        - GET: 사용자 입력 페이지 렌더링.
+    동작 방식:
+    1. GET 요청: 사용자 ID 입력 폼을 표시
+    2. POST 요청: 입력된 user_id로 캘린더 페이지로 리디렉션
     """
     if request.method == "POST":
         user_id = request.POST.get("user_id")
@@ -46,15 +44,12 @@ def user_input(request):
 # ==========================================
 def calendar_view(request, user_id):
     """
-    특정 사용자의 학습 기록을 캘린더로 표시.
-    - 사용자가 학습한 날짜 리스트를 반환.
+    사용자의 학습 기록을 캘린더 형태로 표시하는 뷰 함수
 
-    Args:
-        request: Django HTTP 요청 객체.
-        user_id: 학습 기록을 조회할 사용자 ID.
-
-    Returns:
-        캘린더 페이지 렌더링.
+    주요 기능:
+    1. 사용자의 학습 기록 날짜 조회
+    2. 기존 리포트가 있는 날짜 조회
+    3. 월별 데이터 구성
     """
     # 학습 기록 날짜 추출
     dates = TestHistory.objects.filter(user_id=user_id).values_list(
@@ -125,66 +120,59 @@ def view_report(request, user_id, date):
 # ==========================================
 class StreamingDailyReportAPI(APIView):
     """
-    AI 기반 스트리밍 학습 리포트 생성 API.
-    - 사용자의 학습 기록을 기반으로 AI 모델이 스트리밍 방식으로 리포트를 생성.
+    AI를 활용한 실시간 학습 리포트 생성 API
     """
 
-    def stream_response(self, prompt, user_id, date):
-        """
-        AI 스트리밍 응답 생성.
-        - 스트리밍된 데이터를 한 번에 처리하지 않고 순차적으로 반환.
-
-        Args:
-            prompt: AI 모델에 전달할 프롬프트.
-            user_id: 사용자 ID.
-            date: 학습 기록 날짜.
-
-        Yields:
-            AI 모델이 생성한 리포트 텍스트.
-        """
-        llm = ChatOpenAI(
-            openai_api_key=os.getenv("OPENAI_API_KEY"),
-            model="gpt-4o-mini",
-            streaming=True,
-        )
-
-        chain = RunnablePassthrough() | llm | StrOutputParser()
-
-        report_content = ""
-        try:
-            # 스트리밍 데이터를 하나씩 반환
-            for chunk in chain.stream(prompt):
-                report_content += chunk
-                cleaned_chunk = chunk.replace("data: ", "")  # `data:` 접두어 제거
-                yield cleaned_chunk
-
-            # 리포트를 데이터베이스에 저장
-            if report_content:
-                existing_report = DailyReport.objects.filter(
-                    user_id=user_id, date=date
-                ).first()
-                if not existing_report:
-                    DailyReport.objects.create(
-                        user_id=user_id, date=date, report_content=report_content
-                    )
-
-        except Exception as e:
-            # 예외 처리: 스트리밍 도중 오류가 발생한 경우
-            yield f"data: 오류 발생: {str(e)}\n\n"
-
-    def get(self, request, user_id):
+    @swagger_auto_schema(
+        operation_description="사용자의 학습 기록을 기반으로 AI 리포트를 생성합니다.",
+        manual_parameters=[
+            openapi.Parameter(
+                "user_id",
+                openapi.IN_PATH,
+                description="사용자 ID",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "date": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="조회할 날짜 (YYYY-MM-DD 형식)",
+                    example="2024-01-09",
+                )
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="성공적으로 리포트가 생성됨",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="[예시] \n \
+                                **학습 성과 분석:** 오늘 201문제 중 112문제를 맞췄어요. 정답률은 55.72%로 나쁘지 않아요! \n \
+                                **개선 제안:** 틀린 문제를 다시 풀어보면 더 많은 정답을 맞출 수 있을 거예요. \n \
+                                **동기부여 메시지:** 계속해서 열심히 공부하면 더 잘할 수 있어요! 화이팅! \n \
+                                **부족한 코드명:** T0EE32U01021, T0ME30U20003, T0ME32U01151, T0ME32U13006, T0ME32U13008, T0ME32U61002, T0ME52UAH036, T0SE52U51023, T0SE52UAR003",
+                ),
+            ),
+            400: "잘못된 날짜 형식",
+            404: "해당 사용자와 날짜에 대한 기록이 없음",
+        },
+    )
+    def post(self, request, user_id):
         """
         사용자의 학습 기록을 기반으로 스트리밍 리포트를 생성합니다.
 
         Args:
-            request: Django HTTP 요청 객체.
-            user_id: 사용자 ID.
+            request: Django HTTP 요청 객체
+            user_id: 사용자 ID
 
         Returns:
-            - 기존 리포트가 있으면 해당 리포트를 반환.
-            - 없으면 새로운 리포트를 생성하여 반환.
+            StreamingHttpResponse: 스트리밍 형식의 리포트 응답
         """
-        date_param = request.query_params.get("date")
+        # request.data에서 date 파라미터 가져오기
+        date_param = request.data.get("date")
         try:
             if date_param:
                 date = datetime.strptime(date_param, "%Y-%m-%d").date()
@@ -266,6 +254,46 @@ class StreamingDailyReportAPI(APIView):
             content_type="text/event-stream; charset=utf-8",
         )
 
+    def stream_response(self, prompt, user_id, date):
+        """
+        AI 모델을 통한 스트리밍 응답 생성
+
+        처리 과정:
+        1. OpenAI API 연결
+        2. 프롬프트 처리
+        3. 응답 스트리밍
+        4. 데이터베이스 저장
+        """
+        llm = ChatOpenAI(
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            model="gpt-4o-mini",
+            streaming=True,
+        )
+
+        chain = RunnablePassthrough() | llm | StrOutputParser()
+
+        report_content = ""
+        try:
+            # 스트리밍 데이터를 하나씩 반환
+            for chunk in chain.stream(prompt):
+                report_content += chunk
+                cleaned_chunk = chunk.replace("data: ", "")  # `data:` 접두어 제거
+                yield cleaned_chunk
+
+            # 리포트를 데이터베이스에 저장
+            if report_content:
+                existing_report = DailyReport.objects.filter(
+                    user_id=user_id, date=date
+                ).first()
+                if not existing_report:
+                    DailyReport.objects.create(
+                        user_id=user_id, date=date, report_content=report_content
+                    )
+
+        except Exception as e:
+            # 예외 처리: 스트리밍 도중 오류가 발생한 경우
+            yield f"data: 오류 발생: {str(e)}\n\n"
+
 
 # ==========================================
 # Neo4j 관련 함수 및 뷰
@@ -275,13 +303,11 @@ class StreamingDailyReportAPI(APIView):
 # Neo4j 연결 설정
 def clean_env_var(var):
     """
-    환경 변수 값에서 큰따옴표와 작은따옴표를 제거합니다.
+    환경 변수 문자열 정제
 
-    Args:
-        var (str): 환경 변수 값.
-
-    Returns:
-        str: 앞뒤의 따옴표가 제거된 환경 변수 값.
+    처리:
+    - 앞뒤 따옴표 제거
+    - 공백 처리
     """
     if (
         var
@@ -295,7 +321,7 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
-# driver = GraphDatabase.driver(uri, auth=(username, "1234qwer"))
+# driver = GraphDatabase.driver("bolt://172.18.0.2:7687", auth=(username, "1234qwer"))
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
@@ -304,7 +330,15 @@ print("neo4j : ", uri, username, password)
 
 def get_graph_data():
     """
-    Neo4j에서 그래프 데이터를 조회합니다.
+    Neo4j 데이터베이스에서 그래프 데이터 조회
+
+    반환 데이터:
+    - nodes: 그래프의 노드 정보
+    - links: 노드 간의 연결 정보
+
+    데이터 구조:
+    1. 노드: id, label, color, properties
+    2. 링크: source, target, type, color, title
     """
     with driver.session() as session:
         query = "MATCH (n)-[r]->(m) RETURN n, r, m"
@@ -374,6 +408,14 @@ def neo4j_view(request):
 
 
 class KnowledgeGraphAPI(APIView):
+    """
+    지식 그래프 데이터를 제공하는 REST API
+
+    응답:
+    - 성공: 그래프 데이터 (JSON)
+    - 실패: 에러 메시지와 500 상태 코드
+    """
+
     def get(self, request):
         try:
             graph_data = get_graph_data()
@@ -383,4 +425,7 @@ class KnowledgeGraphAPI(APIView):
 
 
 def graph_view(request):
+    """
+    그래프 시각화 페이지를 렌더링하는 뷰 함수
+    """
     return render(request, "report/graph.html")
