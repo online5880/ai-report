@@ -9,7 +9,7 @@ with open('id_map.json', 'r') as f:
     id_to_index = json.load(f)
 
 # 2. 학생-중단원 관계 데이터 읽기
-with open('student_to_concept_data.json', 'r') as f:
+with open('user_to_mchapter_data.json', 'r') as f:
     student_to_concept_data = json.load(f)
 
 # 3. 학생-중단원 이해도 데이터 읽기
@@ -17,7 +17,7 @@ with open('embedding/transformed_student_to_concept_data.json', 'r') as f:
     student_concept_scores = json.load(f)
 
 # 4. 중단원-강의 관계 데이터 읽기
-with open('concept_to_lecture_data.json', 'r') as f:
+with open('mchapter_to_mcode_data.json', 'r') as f:
     concept_to_lecture_data = json.load(f)
 
 # 5. 학생-중단원 엣지 리스트 생성
@@ -48,7 +48,7 @@ edges_concept_to_lecture = [
 edges = {
     ('student', 'understands', 'concept'): edges_student_to_concept,
     ('concept', 'teaches', 'lecture'): edges_concept_to_lecture,
-    ('concept', 'understood_by', 'student'): [(dst, src) for src, dst in edges_student_to_concept],
+    # ('concept', 'understood_by', 'student'): [(dst, src) for src, dst in edges_student_to_concept],
 }
 
 num_nodes_dict = {
@@ -93,7 +93,20 @@ concept_node_features = torch.tensor(np.array(sorted_embeddings), dtype=torch.fl
 graph.nodes['concept'].data['feat'] = concept_node_features
 
 # 11. 강의 노드 특성 설정
-graph.nodes['lecture'].data['feat'] = torch.randn(num_nodes_dict['lecture'], 20)
+lecture_embeddings_path = "embedding/reduced_lecture_embeddings_23.npy"
+lecture_node_features = np.load(lecture_embeddings_path, allow_pickle=True).item()
+lecture_ids = lecture_node_features['ids']  # IDs는 문자열 또는 정수일 수 있음
+lecture_embeddings = lecture_node_features['embeddings']
+
+# 강의 ID 순서에 따라 정렬
+default_lecture_embedding = np.mean(lecture_embeddings, axis=0)
+lecture_features_sorted = [
+    lecture_embeddings[lecture_ids.index(lecture_id)] if lecture_id in lecture_ids else default_lecture_embedding
+    for lecture_id in id_to_index['lectures'].keys()
+]
+
+# 강의 노드에 임베딩 설정
+graph.nodes['lecture'].data['feat'] = torch.tensor(np.array(lecture_features_sorted), dtype=torch.float32)
 
 # 12. 그래프 정보 출력
 print(graph)

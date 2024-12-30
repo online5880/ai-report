@@ -11,11 +11,11 @@ with open('id_map.json', 'r') as f:
     id_to_index = json.load(f)
 
 # 2. 학생-중단원 관계 데이터 읽기
-with open('student_to_concept_data.json', 'r') as f:
+with open('user_to_mchapter_data.json', 'r') as f:
     student_to_concept_data = json.load(f)
 
 # 3. 중단원-강의 관계 데이터 읽기
-with open('concept_to_lecture_data.json', 'r') as f:
+with open('mchapter_to_mcode_data.json', 'r') as f:
     concept_to_lecture_data = json.load(f)
 
 # 4. 학생-중단원 관계에서 엣지 리스트 생성
