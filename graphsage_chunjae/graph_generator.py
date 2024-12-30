@@ -84,6 +84,7 @@ print("Concept node feature shape:", graph.nodes['concept'].data['feat'].shape)
 print("Lecture node feature shape:", graph.nodes['lecture'].data['feat'].shape)
 
 '''
+그래프 생성 결과
 Matching concepts after type conversion: 34
 Graph(num_nodes={'concept': 34, 'lecture': 60, 'student': 32946},
       num_edges={('concept', 'teaches', 'lecture'): 68, ('student', 'understands', 'concept'): 232806},

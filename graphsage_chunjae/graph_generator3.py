@@ -1,4 +1,4 @@
-# 학생-중단원 엣지 가중치(이해도) 추가
+# 학생-중단원 엣지 가중치(이해도) 추가, 강의 노드 특성 임베딩 추가 
 import json
 import torch
 import numpy as np
