@@ -4,3 +4,5 @@ uvicorn
 mlflow==2.17.2
 torch
 gunicorn
+python-dotenv
+boto3
