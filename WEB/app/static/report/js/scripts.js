@@ -60,24 +60,29 @@ document.addEventListener("DOMContentLoaded", function () {
     // fetchLLMReport 함수도 window에 등록
     window.fetchLLMReport = function (date) {
         const output = document.getElementById("llm-output");
-
         output.innerHTML = "불러오는 중...";
-
         modal.style.display = "block";
 
-        // 이전 요청이 있다면 취소
         if (abortController) {
             abortController.abort();
         }
 
-        // 새로운 AbortController 생성
         abortController = new AbortController();
 
         async function fetchReportStream() {
             try {
-                const response = await fetch(`/api/streaming-daily-report/${userId}/?date=${date}`, {
-                    signal: abortController.signal // AbortController 신호 전달
+                const response = await fetch(`/api/streaming-daily-report/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,  // calendar.html에서 전달받은 userId 사용
+                        date: date
+                    }),
+                    signal: abortController.signal
                 });
+
                 if (!response.ok) {
                     throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
                 }

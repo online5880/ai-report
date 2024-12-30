@@ -125,52 +125,45 @@ class StreamingDailyReportAPI(APIView):
 
     @swagger_auto_schema(
         operation_description="사용자의 학습 기록을 기반으로 AI 리포트를 생성합니다.",
-        manual_parameters=[
-            openapi.Parameter(
-                "user_id",
-                openapi.IN_PATH,
-                description="사용자 ID",
-                type=openapi.TYPE_STRING,
-                required=True,
-            ),
-        ],
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
+            required=["user_id"],
             properties={
+                "user_id": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="사용자 ID"
+                ),
                 "date": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     description="조회할 날짜 (YYYY-MM-DD 형식)",
                     example="2024-01-09",
-                )
+                ),
             },
         ),
         responses={
             200: openapi.Response(
                 description="성공적으로 리포트가 생성됨",
                 schema=openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="[예시] \n \
-                                **학습 성과 분석:** 오늘 201문제 중 112문제를 맞췄어요. 정답률은 55.72%로 나쁘지 않아요! \n \
-                                **개선 제안:** 틀린 문제를 다시 풀어보면 더 많은 정답을 맞출 수 있을 거예요. \n \
-                                **동기부여 메시지:** 계속해서 열심히 공부하면 더 잘할 수 있어요! 화이팅! \n \
-                                **부족한 코드명:** T0EE32U01021, T0ME30U20003, T0ME32U01151, T0ME32U13006, T0ME32U13008, T0ME32U61002, T0ME52UAH036, T0SE52U51023, T0SE52UAR003",
+                    type=openapi.TYPE_STRING, description="스트리밍 형식의 리포트 내용"
                 ),
             ),
-            400: "잘못된 날짜 형식",
+            400: "잘못된 요청 형식",
             404: "해당 사용자와 날짜에 대한 기록이 없음",
         },
     )
-    def post(self, request, user_id):
+    def post(self, request):
         """
         사용자의 학습 기록을 기반으로 스트리밍 리포트를 생성합니다.
 
         Args:
             request: Django HTTP 요청 객체
-            user_id: 사용자 ID
 
         Returns:
             StreamingHttpResponse: 스트리밍 형식의 리포트 응답
         """
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "user_id는 필수 파라미터입니다."}, status=400)
+
         # request.data에서 date 파라미터 가져오기
         date_param = request.data.get("date")
         try:
@@ -321,7 +314,7 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
-# driver = GraphDatabase.driver("bolt://172.18.0.2:7687", auth=(username, "1234qwer"))
+# driver = GraphDatabase.driver("bolt://172.18.0.3:7687", auth=(username, "1234qwer"))
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
 

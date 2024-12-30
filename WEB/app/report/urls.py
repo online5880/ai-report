@@ -32,7 +32,7 @@ urlpatterns = [
     path("calendar/<str:user_id>/", views.calendar_view, name="calendar"),
     path("report/<str:user_id>/<str:date>/", views.view_report, name="view_report"),
     path(
-        "api/streaming-daily-report/<str:user_id>/",
+        "api/streaming-daily-report/",
         views.StreamingDailyReportAPI.as_view(),
         name="streaming-daily-report",
     ),
