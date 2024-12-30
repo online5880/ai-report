@@ -109,6 +109,8 @@ jobs:
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
             docker pull ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
+            cd /home/ubuntu/django
+
             docker-compose pull
             docker-compose up -d --no-deps --build django_1
             sleep 10
