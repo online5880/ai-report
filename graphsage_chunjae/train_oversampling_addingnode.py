@@ -83,6 +83,15 @@ class GraphSAGE(nn.Module):
 
         return x
 
+def filter_block_edges(blocks):
+    for i, block in enumerate(blocks):
+        if i == 1 and 'understands' in block.etypes:
+            edge_type_to_remove = 'understands'
+            block = dgl.edge_type_subgraph(block, [etype for etype in block.etypes if etype != edge_type_to_remove])
+            print(f"Removed edge type '{edge_type_to_remove}' from Block {i}")
+        print(f"Edge types in block {i}: {block.etypes}")
+    return blocks
+
 # === Main Code ===
 if __name__ == "__main__":
     g = generate_graph()
@@ -124,10 +133,9 @@ if __name__ == "__main__":
 
     for step, (input_nodes, output_nodes, blocks) in enumerate(dataloader):
         print(f"--- Step {step} ---")
+        blocks = filter_block_edges(blocks)  # Apply filter to remove unwanted edges
+
         for i, block in enumerate(blocks):
             print(f"--- Block {i} ---")
-            print("Edge types sampled in this block:", block.etypes)
-            print("Source nodes in block:", block.srcdata['_ID'])
-            print("Destination nodes in block:", block.dstdata['_ID'])
-            print(f"Understands edges in block: {block.num_edges(('student', 'understands', 'concept'))}")
-            print(f"Teaches edges in block: {block.num_edges(('concept', 'teaches', 'lecture'))}")
+            for etype in block.etypes:
+                print(f"Edge type: {etype}, Count: {block.num_edges(etype)}")
