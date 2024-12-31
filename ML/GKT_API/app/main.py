@@ -100,7 +100,7 @@ async def predict(input_data: InputData):
         user_data.sort_values(by=["UserID", "CreDate"], inplace=True)  # "CreDate" 컬럼을 기준으로 정렬
 
         # Step 2 - Enumerate skill id
-        user_data['skill'], _ = pd.factorize(user_data['f_mchapter_id'], sort=True)  # we can also use problem_id to represent exercises
+        user_data['skill'], skill_map = pd.factorize(user_data['f_mchapter_id'], sort=True)  # 팩토라이징 및 매핑 정보 추출
 
         # correct 생성 (O -> 1, X -> 0)
         user_data['Correct'] = user_data['Correct'].map({'O': 1, 'X': 0})
@@ -109,12 +109,22 @@ async def predict(input_data: InputData):
         # use_binary: (0,1); !use_binary: (1,2,3,4,5,6,7,8,9,10,11,12). Either way, the correct result index is guaranteed to be 1
         user_data['skill_with_answer'] = user_data['skill'] * 2 + user_data['Correct']
 
+        # 팩토라이징되지 않은 입력 스킬을 기존 skill_map에 따라 팩토라이징
+        skill_map_dict = {value: idx for idx, value in enumerate(skill_map)}  # 매핑 정보 딕셔너리 생성
+        next_skills = [skill_map_dict.get(skill, -1) for skill in input_data.skill_list]  # -1은 미정의된 스킬
+
+        # 매핑되지 않은 스킬이 있는지 확인
+        if -1 in next_skills:
+            raise HTTPException(status_code=400, detail="One or more skills in skill_list are not present in the data.")
+
+        # correct_list와 next_skills 확인
+        next_answers = input_data.correct_list
+        if len(next_skills) != len(next_answers):
+            raise HTTPException(status_code=400, detail="skill_list and correct_list must have the same length.")
+
         # 유저 풀이 시퀀스 및 다음 문제 정의
         features = user_data['skill_with_answer'].tolist()
         questions = user_data['skill'].tolist()
-
-        next_skills = input_data.skill_list
-        next_answers = input_data.correct_list
 
         for i in range(0, len(next_skills)):
             features.append(next_skills[i] * 2 + next_answers[i])
