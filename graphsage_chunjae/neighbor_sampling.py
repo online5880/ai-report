@@ -63,8 +63,11 @@ class GraphSAGE(nn.Module):
         # 드롭아웃 계층 정의
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, g, features):
+    def forward(self, blocks, features):
+        # 블록 리스트의 첫 번째 블록에서 입력 특성 변환
+        print(f"Initial features keys: {features.keys()}")
         student_feats = self.fc_student(features['student'])
+        print(f"Student features shape: {student_feats.shape}")
         concept_feats = self.fc_concept(features['concept'])
         lecture_feats = self.fc_lecture(features['lecture'])
 
@@ -74,34 +77,45 @@ class GraphSAGE(nn.Module):
             'lecture': lecture_feats
         }
 
-        for i, layer in enumerate(self.layers):
-            x = layer(g, features)
-            if i != len(self.layers) - 1:
+        # 각 블록을 순회하며 처리
+        for i, (block, layer) in enumerate(zip(blocks, self.layers)):
+            x = layer(block, features)  # 각 블록에 대해 HeteroGraphConv 호출
+            print(f"Block {i} output keys: {x.keys()}")  # Debugging: 각 블록의 출력 확인
+            if 'student' not in x:
+                print(f"Warning: 'student' key missing in Block {i} output.")
+            if i != len(self.layers) - 1:  # 마지막 레이어가 아닌 경우 활성화 함수 및 드롭아웃 적용
                 x = {ntype: F.relu(feat) for ntype, feat in x.items()}
                 x = {ntype: self.dropout(feat) for ntype, feat in x.items()}
-            features = x
+            features = x  # 업데이트된 피처를 다음 블록으로 전달
 
-        return x
+
+
+        return features  # 마지막 블록의 결과 반환
+
 
 def filter_block_edges(blocks):
+    filtered_blocks = []
     for i, block in enumerate(blocks):
-        if i == 1 and 'understands' in block.etypes:
-            edge_type_to_remove = 'understands'
-            block = dgl.edge_type_subgraph(block, [etype for etype in block.etypes if etype != edge_type_to_remove])
-            print(f"Removed edge type '{edge_type_to_remove}' from Block {i}")
-        print(f"Edge types in block {i}: {block.etypes}")
-    return blocks
+        if 'teaches' in block.etypes and block.num_edges('teaches') == 0:
+            if block.num_edges('understands') > 0:  # understands 엣지가 있는 경우 조건부 허용
+                print(f"Block {i} has no 'teaches' edges but has 'understands'. Proceeding.")
+                filtered_blocks.append(block)
+            else:
+                print(f"Skipping Block {i} due to 0 'teaches' and 'understands' edges.")
+        else:
+            filtered_blocks.append(block)
+    return filtered_blocks
 
 # === Main Code ===
 if __name__ == "__main__":
     g = generate_graph()
 
     # Step 1: Add more teaches edges to improve connectivity
-    g = add_teaches_edges(g, num_edges=10000)
+    g = add_teaches_edges(g, num_edges=20000)
 
     # Step 2: Oversample nodes to ensure lecture nodes are sampled more frequently
-    oversampled_concept_nodes = oversample_nodes(g, 'concept', oversample_factor=20)
-    oversampled_lecture_nodes = oversample_nodes(g, 'lecture', oversample_factor=20)
+    oversampled_concept_nodes = oversample_nodes(g, 'concept', oversample_factor=30)
+    oversampled_lecture_nodes = oversample_nodes(g, 'lecture', oversample_factor=30)
 
     print("Total teaches edges in graph:", g.num_edges(('concept', 'teaches', 'lecture')))
 
@@ -109,10 +123,10 @@ if __name__ == "__main__":
     sampler = dgl.dataloading.MultiLayerNeighborSampler([
     {
         ('student', 'understands', 'concept'): 10,
-        ('concept', 'teaches', 'lecture'): 0
+        ('concept', 'teaches', 'lecture'): 5
     },  # Block 0: understands 엣지만 샘플링
     {
-        ('student', 'understands', 'concept'): 0,
+        ('student', 'understands', 'concept'): 5,
         ('concept', 'teaches', 'lecture'): 5
     }   # Block 1: teaches 엣지만 샘플링
     ])
@@ -132,9 +146,19 @@ if __name__ == "__main__":
     )
 
     for step, (input_nodes, output_nodes, blocks) in enumerate(dataloader):
-        print(f"--- Step {step} ---")
-        blocks = filter_block_edges(blocks)  # Apply filter to remove unwanted edges
+        blocks = filter_block_edges(blocks)  # Filter blocks with no 'teaches' edges
+        if not blocks:  # Skip batch if no valid blocks
+            print(f"Skipping batch {step} due to no valid blocks.")
+            continue
 
+        print(f"--- Step {step} ---")
+
+        # 디버깅: Block 0의 엣지 타입과 개수 확인
+        print(f"Step {step}: Block 0 edge types: {blocks[0].etypes}")
+        for etype in blocks[0].etypes:
+            print(f"Edge type {etype}: {blocks[0].num_edges(etype)} edges")
+
+        # 각 블록에 대해 디버깅 정보 출력
         for i, block in enumerate(blocks):
             print(f"--- Block {i} ---")
             for etype in block.etypes:
