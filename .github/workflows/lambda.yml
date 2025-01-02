@@ -1,4 +1,4 @@
-name: Lambda Trigger Workflow
+name: GKT API CI/CD with Lambda Trigger
 
 on:
   workflow_dispatch:
@@ -8,22 +8,54 @@ on:
         required: false
         default: "{}"
 
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com
+  ECR_REPOSITORY: bigdata/team-01/gkt-api
+
 jobs:
-  lambda-trigger:
+  docker_build_and_push:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: AWS Credential 인증
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Print S3 Event Data
+      - name: Login to Amazon ECR
         run: |
-          echo "S3 Event Data:"
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.ECR_REPOSITORY }} ML/GKT_API
+          docker tag ${{ env.ECR_REPOSITORY }}:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Print S3 Event Data (디버깅용)
+        run: |
+          echo "Received S3 Event:"
           echo "${{ github.event.inputs.s3_event }}"
 
-      - name: Process Lambda Trigger
-        run: |
-          echo "Processing Lambda trigger..."
-          echo "S3 Event Data:"
-          echo "${{ github.event.inputs.s3_event }}"
-          echo "Lambda workflow executed successfully."
+      - name: EC2 접속 후 GKT 배포
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/gkt
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
