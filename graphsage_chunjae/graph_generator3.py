@@ -20,22 +20,27 @@ with open('embedding/transformed_student_to_concept_data.json', 'r') as f:
 with open('mchapter_to_mcode_data.json', 'r') as f:
     concept_to_lecture_data = json.load(f)
 
-# 5. 학생-중단원 엣지 리스트 생성
-edges_student_to_concept = []
-understanding_scores = []  # 학생-중단원 이해도 가중치 저장
+# # 5. 학생-중단원 엣지 리스트 생성
+# edges_student_to_concept = []
+# understanding_scores = []  # 학생-중단원 이해도 가중치 저장
 
-# 학습 기록을 바탕으로 엣지 생성
-for student_id, concept_id in student_to_concept_data:
-    if student_id in id_to_index['students'] and concept_id in id_to_index['concepts']:
-        # 학습한 중단원에 대한 이해도 점수 가져오기
-        if student_id in student_concept_scores and concept_id in student_concept_scores[student_id]:
-            score = student_concept_scores[student_id][concept_id]
-            if score > 0:  # 이해도가 0 이상인 경우에만 엣지 생성
-                student_idx = id_to_index['students'][student_id]
-                concept_idx = id_to_index['concepts'][concept_id]
-                edges_student_to_concept.append((student_idx, concept_idx))
-                understanding_scores.append(score)
-
+# # 학습 기록을 바탕으로 엣지 생성
+# for student_id, concept_id in student_to_concept_data:
+#     if student_id in id_to_index['students'] and concept_id in id_to_index['concepts']:
+#         # 학습한 중단원에 대한 이해도 점수 가져오기
+#         if student_id in student_concept_scores and concept_id in student_concept_scores[student_id]:
+#             score = student_concept_scores[student_id][concept_id]
+#             if score > 0:  # 이해도가 0 이상인 경우에만 엣지 생성
+#                 student_idx = id_to_index['students'][student_id]
+#                 concept_idx = id_to_index['concepts'][concept_id]
+#                 edges_student_to_concept.append((student_idx, concept_idx))
+#                 understanding_scores.append(score)
+# 4. 학생-중단원 관계에서 엣지 리스트 생성
+edges_student_to_concept = [
+    (id_to_index['students'][student], id_to_index['concepts'][concept]) 
+    for student, concept in student_to_concept_data
+    if student in id_to_index['students'] and concept in id_to_index['concepts']
+]
 
 # 6. 중단원-강의 엣지 리스트 생성
 edges_concept_to_lecture = [
@@ -59,8 +64,8 @@ num_nodes_dict = {
 
 graph = dgl.heterograph(edges, num_nodes_dict=num_nodes_dict)
 
-# 8. 엣지 가중치 추가
-graph.edges['understands'].data['weight'] = torch.tensor(understanding_scores, dtype=torch.float32)
+# # 8. 엣지 가중치 추가
+# graph.edges['understands'].data['weight'] = torch.tensor(understanding_scores, dtype=torch.float32)
 
 # 9. 학생 노드 특성 설정
 num_students = len(id_to_index['students'])
@@ -113,7 +118,7 @@ print(graph)
 print("Student node feature shape:", graph.nodes['student'].data['feat'].shape)
 print("Concept node feature shape:", graph.nodes['concept'].data['feat'].shape)
 print("Lecture node feature shape:", graph.nodes['lecture'].data['feat'].shape)
-print("Edge weights for 'understands':", graph.edges['understands'].data['weight'][:5])
+# print("Edge weights for 'understands':", graph.edges['understands'].data['weight'][:5])
 
 def generate_graph():
     return graph
@@ -129,3 +134,5 @@ print("Graph schema:", g)
 print("Student features:", g.nodes['student'].data.keys())
 print("Concept features:", g.nodes['concept'].data.keys())
 print("Lecture features:", g.nodes['lecture'].data.keys())
+
+

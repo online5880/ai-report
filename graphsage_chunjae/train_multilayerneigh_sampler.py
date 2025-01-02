@@ -77,8 +77,8 @@ if __name__ == "__main__":
             ('concept', 'teaches', 'lecture'): 20       # 1-hop 'teaches' 샘플링
         },
         {
-            ('student', 'understands', 'concept'): 30, # 2-hop 'understands' 샘플링
-            ('concept', 'teaches', 'lecture'): 10       # 2-hop 'teaches' 샘플링
+            ('student', 'understands', 'concept'): 0, # 2-hop 'understands' 샘플링
+            ('concept', 'teaches', 'lecture'): 500       # 2-hop 'teaches' 샘플링
         }
     ])
 

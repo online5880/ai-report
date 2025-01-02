@@ -44,8 +44,8 @@ def get_sampler():
             ('concept', 'teaches', 'lecture'): 300
         },  # Block 0: understands 엣지만 샘플링
         {
-            ('student', 'understands', 'concept'): 50,
-            ('concept', 'teaches', 'lecture'): 300
+            ('student', 'understands', 'concept'): 0,
+            ('concept', 'teaches', 'lecture'): 500
         }   # Block 1: teaches 엣지만 샘플링
     ])
 
