@@ -6,3 +6,4 @@ torch
 gunicorn
 python-dotenv
 boto3
+polars

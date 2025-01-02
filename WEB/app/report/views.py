@@ -157,7 +157,6 @@ class StreamingDailyReportAPI(APIView):
                 report_content += chunk
                 cleaned_chunk = chunk.replace("data: ", "")  # `data:` 접두어 제거
                 yield cleaned_chunk
-
             # 리포트를 데이터베이스에 저장
             if report_content:
                 existing_report = DailyReport.objects.filter(
