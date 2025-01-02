@@ -5,14 +5,30 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # API 호출을 통해 워크플로 트리거 가능
+  workflow_dispatch:  # Lambda에서 트리거 가능
+    inputs:  # Lambda에서 전달할 입력 정의
+      s3_event:
+        description: "S3 이벤트 데이터"
+        required: false
+        default: "{}"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
+      # 코드를 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Print a message
-        run: echo "ML CI/CD Pipeline Triggered via workflow_dispatch"
+      # S3 이벤트 데이터 출력 (디버깅용)
+      - name: Print S3 Event Data
+        run: echo "S3 Event: ${{ github.event.inputs.s3_event }}"
+
+      # ML 파이프라인 실행
+      - name: Run ML Pipeline
+        run: |
+          echo "Starting ML Pipeline..."
+          echo "Received S3 Event: ${{ github.event.inputs.s3_event }}"
+          # 여기에 ML 파이프라인 작업 추가
+          echo "ML Pipeline executed successfully."
