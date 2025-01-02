@@ -17,6 +17,8 @@ COPY ./requirements.txt /code/requirements.txt
 RUN apt-get update && apt-get install -y --no-install-recommends gcc && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /code/requirements.txt && \
+    pip install --no-cache-dir torch==2.4.1 \
+        --extra-index-url https://download.pytorch.org/whl/cpu && \
     apt-get remove -y gcc && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
