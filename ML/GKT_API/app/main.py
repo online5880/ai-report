@@ -10,21 +10,11 @@ import time
 import numpy as np
 import concurrent.futures
 
+# BASE_DIR 설정 및 sys.path에 모델 경로 추가
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, "model"))
 
 print("Current sys.path:", sys.path)
-
-
-# try:
-#     import models
-
-#     print("모듈이 성공적으로 로드되었습니다.")
-# except ImportError as e:
-#     print(f"모듈 로드 실패: {e}")
-
-# import app.models.models
-
 
 # MLflow Tracking URI 설정
 mlflow.set_tracking_uri(
@@ -33,7 +23,17 @@ mlflow.set_tracking_uri(
 
 
 def get_csv_file(local_path, s3_bucket_name, s3_key):
+    """
+    CSV 파일을 로컬에서 읽거나 S3에서 다운로드 후 읽는 함수.
 
+    Args:
+        local_path (str): 로컬 파일 경로.
+        s3_bucket_name (str): S3 버킷 이름.
+        s3_key (str): S3에서 파일의 경로.
+
+    Returns:
+        pl.DataFrame: Polars DataFrame.
+    """
     if os.path.exists(local_path):
         print(f"로컬에서 파일을 읽습니다: {local_path}")
         return pl.read_csv(local_path)
@@ -66,12 +66,10 @@ def get_parquet_file(local_path, s3_bucket_name, s3_key):
     Returns:
         pl.DataFrame: Polars DataFrame.
     """
-    # 로컬 파일이 있는 경우 로드
     if os.path.exists(local_path):
         print(f"로컬에서 파일을 읽습니다: {local_path}")
         return pl.read_parquet(local_path)
 
-    # 로컬 파일이 없는 경우 S3에서 다운로드
     print(f"로컬 파일이 없습니다. S3에서 파일을 다운로드합니다: {s3_bucket_name}/{s3_key}")
     try:
         # S3 클라이언트 생성
@@ -102,8 +100,13 @@ except RuntimeError as e:
     print(f"에러: {e}")
 
 
-# 모델 로드
 def load_model():
+    """
+    MLflow에서 모델을 로드하는 함수.
+
+    Returns:
+        torch.nn.Module: 로드된 PyTorch 모델.
+    """
     logged_model = "runs:/446b1a8e75ff4263a59f168a5605ba90/best_model"
     model = mlflow.pytorch.load_model(logged_model, map_location=torch.device("cpu"))
     model.eval()
@@ -119,14 +122,13 @@ app = FastAPI(
 )
 
 
-# Health Check 엔드포인트 정의
-@app.get("/health")  # HTTP GET 요청을 처리
+@app.get("/health")
 def health_check():
     """
     Health Check 엔드포인트.
     서버가 정상적으로 작동하는지 확인하기 위해 사용.
     """
-    return {"status": "ok"}  # 서버 상태를 JSON 형식으로 반환
+    return {"status": "ok"}
 
 
 # 입력 데이터 모델 정의
@@ -138,6 +140,16 @@ class InputData(BaseModel):
 
 @app.post("/api/gkt")
 async def predict(input_data: InputData):
+    """
+    예측 API 엔드포인트.
+    입력 데이터를 받아 모델 예측 결과를 반환.
+
+    Args:
+        input_data (InputData): 예측에 필요한 입력 데이터.
+
+    Returns:
+        dict: 예측 결과.
+    """
     try:
         start_time = time.time()  # 전체 프로세스 시작 시간
 
@@ -202,6 +214,17 @@ async def predict(input_data: InputData):
         print(f"PyTorch에서 사용하는 스레드 수: {max_threads}개")
 
         def prepare_data(user_data, next_skills, input_data):
+            """
+            입력 데이터를 준비하는 함수.
+
+            Args:
+                user_data (pl.DataFrame): 유저 데이터.
+                next_skills (list): 다음 스킬 리스트.
+                input_data (InputData): 입력 데이터.
+
+            Returns:
+                tuple: features_tensor, questions_tensor
+            """
             try:
                 features = np.array(
                     user_data["skill_with_answer"].to_list(), dtype=np.int64
@@ -229,6 +252,18 @@ async def predict(input_data: InputData):
         def model_prediction(
             active_model, features_tensor, questions_tensor, next_skills
         ):
+            """
+            모델 예측을 수행하는 함수.
+
+            Args:
+                active_model (torch.nn.Module): 예측에 사용할 모델.
+                features_tensor (torch.Tensor): 입력 피처 텐서.
+                questions_tensor (torch.Tensor): 입력 질문 텐서.
+                next_skills (list): 다음 스킬 리스트.
+
+            Returns:
+                torch.Tensor: 예측 결과.
+            """
             try:
                 with torch.no_grad():
                     pred_res, _, _, _ = active_model(features_tensor, questions_tensor)
