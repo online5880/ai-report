@@ -7,6 +7,8 @@ import polars as pl
 import sys
 import boto3
 import time
+import numpy as np
+import concurrent.futures
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, "model"))
@@ -193,20 +195,66 @@ async def predict(input_data: InputData):
         print(f"Step 6 (입력 스킬 매핑): {step6_end - step6_start:.4f} 초")
 
         # Step 7 - 모델 예측
+        # CPU 스레드 수 설정
+        cpu_core_count = os.cpu_count()  # CPU 코어 수 가져오기
+        max_threads = max(1, cpu_core_count // 2)  # 코어 수의 절반만 사용
+        torch.set_num_threads(max_threads)
+        print(f"PyTorch에서 사용하는 스레드 수: {max_threads}개")
+
+        def prepare_data(user_data, next_skills, input_data):
+            try:
+                features = np.array(
+                    user_data["skill_with_answer"].to_list(), dtype=np.int64
+                )
+                questions = np.array(user_data["skill"].to_list(), dtype=np.int64)
+
+                next_skills_array = np.array(next_skills, dtype=np.int64)
+                correct_list_array = np.array(input_data.correct_list, dtype=np.int64)
+
+                # features와 questions 확장
+                features = np.concatenate(
+                    [features, next_skills_array * 2 + correct_list_array]
+                )
+                questions = np.concatenate([questions, next_skills_array])
+
+                # 텐서 생성 (numpy → torch 텐서)
+                features_tensor = torch.from_numpy(features).unsqueeze(0)
+                questions_tensor = torch.from_numpy(questions).unsqueeze(0)
+
+                return features_tensor, questions_tensor
+            except Exception as e:
+                print(f"입력 데이터 준비 중 오류 발생: {e}")
+                raise
+
+        def model_prediction(
+            active_model, features_tensor, questions_tensor, next_skills
+        ):
+            try:
+                with torch.no_grad():
+                    pred_res, _, _, _ = active_model(features_tensor, questions_tensor)
+                    next_preds = pred_res.squeeze(0)[-len(next_skills) :]
+                return next_preds
+            except Exception as e:
+                print(f"모델 예측 중 오류 발생: {e}")
+                raise
+
+        # Step 7 - 모델 예측
         step7_start = time.time()
-        features = user_data["skill_with_answer"].to_list()
-        questions = user_data["skill"].to_list()
 
-        for i in range(len(next_skills)):
-            features.append(next_skills[i] * 2 + input_data.correct_list[i])
-            questions.append(next_skills[i])
+        # 입력 데이터 확인 및 변환
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_data = executor.submit(
+                prepare_data, user_data, next_skills, input_data
+            )
+            features_tensor, questions_tensor = future_data.result()
 
-        features_tensor = torch.tensor(features, dtype=torch.long).unsqueeze(0)
-        questions_tensor = torch.tensor(questions, dtype=torch.long).unsqueeze(0)
+        active_model = model  # TorchScript 변환 실패 시 기본 모델 사용
 
-        with torch.no_grad():
-            pred_res, _, _, _ = model(features_tensor, questions_tensor)
-            next_preds = pred_res.squeeze(0)[-len(next_skills) :]
+        # 모델 예측
+        next_preds = model_prediction(
+            active_model, features_tensor, questions_tensor, next_skills
+        )
+
         step7_end = time.time()
         print(f"Step 7 (모델 예측): {step7_end - step7_start:.4f} 초")
 
