@@ -1,0 +1,44 @@
+name: ML CI/CD Pipeline
+
+# 워크플로 트리거 설정
+on:
+  workflow_dispatch:  # 수동 또는 외부 API 호출로 실행 가능
+    inputs:  # 외부에서 전달받을 데이터 정의
+      s3_event:
+        description: "S3 이벤트 데이터"
+        required: false  # 필수 여부
+        default: "{}"    # 기본값 (JSON 형식)
+
+# 작업 정의
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 코드를 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # S3 이벤트 데이터 출력 (디버깅용)
+      - name: Print S3 Event Data
+        run: echo "S3 Event: ${{ github.event.inputs.s3_event }}"
+
+      # ML CI/CD 파이프라인 실행
+      - name: Run ML Pipeline
+        run: |
+          echo "Starting ML Pipeline..."
+          echo "S3 Event: ${{ github.event.inputs.s3_event }}"
+          # 여기에 ML 모델 빌드, 테스트, 배포 등의 명령어를 추가
+          echo "ML Pipeline executed successfully."
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # 배포 단계 (예시)
+      - name: Deployment Step
+        run: |
+          echo "Deploying application..."
+          # 배포 스크립트를 여기에 추가
+          echo "Deployment completed."
