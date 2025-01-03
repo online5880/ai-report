@@ -9,12 +9,12 @@ from training import train_model
 from recommendation import recommend_concepts, compute_similarities
 
 def get_positive_and_negative_edges(g, embeddings):
-    # Positive edges
+    # Positive edges(실제 연결된 엣지)
     pos_edges = g.edges()
     pos_src, pos_dst = pos_edges[0], pos_edges[1]
     pos_scores = (embeddings[pos_src] * embeddings[pos_dst]).sum(dim=1)
 
-    # Negative edges
+    # Negative edges(실제 연결되지 않은 엣지지)
     neg_src, neg_dst = dgl.sampling.global_uniform_negative_sampling(
         g, num_samples=len(pos_src)
     )
@@ -23,20 +23,20 @@ def get_positive_and_negative_edges(g, embeddings):
     return pos_scores, neg_scores
 
 def compute_auc(model, g, features):
+    # 모델 성능 평가 지표
     model.eval()
     with torch.no_grad():
         embeddings = model(g, features)
 
     pos_scores, neg_scores = get_positive_and_negative_edges(g, embeddings)
 
-    # Labels and scores
     labels = torch.cat([torch.ones(len(pos_scores)), torch.zeros(len(neg_scores))]).numpy()
     scores = torch.cat([pos_scores, neg_scores]).numpy()
 
-    # Compute AUC
     return roc_auc_score(labels, scores)
 
 def mean_cosine_similarity(target_idx, recommended, similarities, k):
+    # 모델 성능 평가 지표
     """
     Mean Cosine Similarity@K 계산
     """
@@ -44,6 +44,7 @@ def mean_cosine_similarity(target_idx, recommended, similarities, k):
     return np.mean(top_k_similarities)
 
 def weighted_mean_similarity(target_idx, recommended, similarities, k):
+    # 모델 성능 평가 지표
     """
     Weighted Mean Cosine Similarity@K 계산
     """
@@ -74,8 +75,10 @@ def main():
     # 5. Mean Cosine Similarity 및 Weighted Mean Similarity 계산
     similarities = compute_similarities(embeddings)
     target_concept = 0  # 예: 첫 번째 노드
+
     # 타겟 노드 제외한 상위 5개 추천 노드 생성
     recommended = [idx for idx in np.argsort(-similarities[target_concept]) if idx != target_concept][:5]
+    
     mean_sim = mean_cosine_similarity(target_concept, recommended, similarities, k=5)
     weighted_sim = weighted_mean_similarity(target_concept, recommended, similarities, k=5)
 

@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 def load_graph(json_path="graph_schema.json"):
-    """JSON 파일로부터 DGL 그래프를 로드"""
+    """그래프 정보(노드-특성 포함함, 엣지)가 담긴 JSON 파일로부터 DGL 그래프를 로드"""
     with open(json_path, "r") as file:
         data = json.load(file)
 

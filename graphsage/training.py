@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import dgl
 
 def link_prediction_loss_hinge(g, embeddings):
-    """링크 예측용 힌지 손실 계산"""
+    """링크 예측용 힌지 손실(추천 제도에서 많이 쓰이는 성능 지표) 계산"""
     pos_edges = g.edges()
     pos_src, pos_dst = pos_edges[0], pos_edges[1]
     pos_scores = (embeddings[pos_src] * embeddings[pos_dst]).sum(dim=1)
