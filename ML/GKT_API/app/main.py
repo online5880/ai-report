@@ -73,3 +73,64 @@ async def predict(input_data: InputData):
         return {"predictions": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/gkt/confusion-matrix")
+async def get_confusion_matrix(input_data: InputData):
+    try:
+        threshold = 0.70
+        user_data = data.filter(pl.col("UserID") == input_data.user_id)
+        user_data = user_data.sort("CreDate")
+
+        # 스킬 매핑
+        skill_map = user_data["f_mchapter_id"].unique().sort().to_list()
+        skill_map_dict = {value: idx for idx, value in enumerate(skill_map)}
+
+        user_data = user_data.with_columns(
+            pl.col("f_mchapter_id")
+            .replace(skill_map_dict)
+            .cast(pl.Int32)
+            .alias("skill")
+        )
+        user_data = user_data.with_columns(
+            pl.col("Correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("Correct")
+        )
+        user_data = user_data.with_columns(
+            (pl.col("skill") * 2 + pl.col("Correct")).alias("skill_with_answer")
+        )
+
+        next_skills = [skill_map_dict.get(skill, -1) for skill in input_data.skill_list]
+        if -1 in next_skills:
+            raise HTTPException(
+                status_code=400,
+                detail="One or more skills in skill_list are not present in the data.",
+            )
+
+        features_tensor, questions_tensor = prepare_data(user_data, next_skills, input_data)
+
+        next_preds = predict_model(model, features_tensor, questions_tensor, next_skills)
+        confusion_results = []
+
+        for i, pred in enumerate(next_preds.tolist()):
+            pred_result = 1 if pred >= threshold else 0
+            if pred_result == input_data.correct_list[i]:
+                if pred_result == 1:
+                    analysis = "개념 확립 (정답 확신)"
+                else:
+                    analysis = "개념 확립 (오답 확신)"
+            else:
+                if pred_result == 1:
+                    analysis = "실수 (과신)"
+                else:
+                    analysis = "찍음 (운 좋게 맞춤)"
+
+            confusion_results.append({
+                "skill": input_data.skill_list[i],
+                "predicted_probability": pred,
+                "predicted_result": pred_result,
+                "actual_result": input_data.correct_list[i],
+                "analysis": analysis
+            })
+
+        return {"confusion_matrix": confusion_results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

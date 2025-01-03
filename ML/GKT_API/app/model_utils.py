@@ -2,7 +2,7 @@ import torch
 import mlflow.pytorch
 import os
 import sys
-from .config import BASE_DIR, MLFLOW_TRACKING_URI
+from config import BASE_DIR, MLFLOW_TRACKING_URI
 
 mlflow.set_tracking_uri(
     MLFLOW_TRACKING_URI
