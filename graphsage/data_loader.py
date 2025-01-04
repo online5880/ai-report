@@ -14,6 +14,12 @@ def load_graph(json_path="graph_schema.json"):
     # 노드 ID 매핑
     id_to_idx = {node["id"]: idx for idx, node in enumerate(nodes)}
 
+    # 매핑 정보 저장
+    with open("id_to_idx.json", "w") as f:
+        json.dump(id_to_idx, f)
+    with open("idx_to_id.json", "w") as f:
+        json.dump({v: k for k, v in id_to_idx.items()}, f)
+
     # 노드 임베딩 배열 생성
     node_features = np.array([node["embedding"] for node in nodes])
 
@@ -34,3 +40,4 @@ def load_graph(json_path="graph_schema.json"):
     g.ndata['features'] = valid_node_features
 
     return g
+
