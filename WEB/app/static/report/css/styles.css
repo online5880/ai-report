@@ -90,64 +90,6 @@ body, html {
     color: #1e293b;
 }
 
-/* Chatbot */
-#chatbot {
-    display: none;
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 300px;
-    height: 400px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 10px;
-    flex-direction: column;
-    z-index: 9999;
-}
-
-#chatbot-header {
-    background-color: #007bff;
-    color: white;
-    padding: 10px;
-    text-align: center;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-}
-
-#chatbot-messages {
-    flex-grow: 1;
-    padding: 10px;
-    overflow-y: auto;
-}
-
-#chatbot-input {
-    padding: 10px;
-    border-top: 1px solid #ccc;
-    display: flex;
-}
-
-#chatbot-input input {
-    flex-grow: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-#chatbot-input button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-#chatbot-input button:hover {
-    background-color: #0056b3;
-}
-
 /* FullCalendar 날짜 셀 */
 .fc-daygrid-day {
     min-height: 80px !important;
@@ -266,7 +208,64 @@ h1::after {
     left: 50%;
     transform: translateX(-50%);
     width: 50%;
-    height: 3px;
+    height: 3px;body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    button:active {
+      background-color: #003f7f;
+    }
     background-color: #3498db;
     border-radius: 2px;
 }

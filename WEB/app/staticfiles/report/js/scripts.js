@@ -60,24 +60,29 @@ document.addEventListener("DOMContentLoaded", function () {
     // fetchLLMReport 함수도 window에 등록
     window.fetchLLMReport = function (date) {
         const output = document.getElementById("llm-output");
-
         output.innerHTML = "불러오는 중...";
-
         modal.style.display = "block";
 
-        // 이전 요청이 있다면 취소
         if (abortController) {
             abortController.abort();
         }
 
-        // 새로운 AbortController 생성
         abortController = new AbortController();
 
         async function fetchReportStream() {
             try {
-                const response = await fetch(`/api/streaming-daily-report/${userId}/?date=${date}`, {
-                    signal: abortController.signal // AbortController 신호 전달
+                const response = await fetch(`/api/streaming-daily-report/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,  // calendar.html에서 전달받은 userId 사용
+                        date: date
+                    }),
+                    signal: abortController.signal
                 });
+
                 if (!response.ok) {
                     throw new Error(`서버 오류: ${response.status} ${response.statusText}`);
                 }
@@ -124,36 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 지식 그래프 로딩
         fetchAndRenderKnowledgeGraph(date);
-    };
-
-    // 초기 상태에서 챗봇을 닫아둠
-    chatbot.style.display = "none";
-
-    // 챗봇 열기/닫기 함수
-    window.toggleChatbot = function () {
-        if (chatbot.style.display === "none") {
-            chatbot.style.display = "flex"; // 열기
-        } else {
-            chatbot.style.display = "none"; // 닫기
-        }
-    };
-
-    // 메시지 전송 함수
-    window.sendMessage = function () {
-        const inputField = document.getElementById("chatbot-text");
-        const message = inputField.value;
-        if (message.trim() !== "") {
-            const messageDiv = document.createElement("div");
-            messageDiv.textContent = "나: " + message;
-            document.getElementById("chatbot-messages").appendChild(messageDiv);
-            inputField.value = "";
-            setTimeout(() => {
-                const responseDiv = document.createElement("div");
-                responseDiv.textContent = "챗봇: 이건 예시 응답입니다.";
-                document.getElementById("chatbot-messages").appendChild(responseDiv);
-                document.getElementById("chatbot-messages").scrollTop = document.getElementById("chatbot-messages").scrollHeight;
-            }, 1000);
-        }
     };
 
     const titleElement = document.querySelector('.fc-toolbar-title');

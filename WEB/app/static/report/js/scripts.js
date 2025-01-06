@@ -131,36 +131,6 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAndRenderKnowledgeGraph(date);
     };
 
-    // 초기 상태에서 챗봇을 닫아둠
-    chatbot.style.display = "none";
-
-    // 챗봇 열기/닫기 함수
-    window.toggleChatbot = function () {
-        if (chatbot.style.display === "none") {
-            chatbot.style.display = "flex"; // 열기
-        } else {
-            chatbot.style.display = "none"; // 닫기
-        }
-    };
-
-    // 메시지 전송 함수
-    window.sendMessage = function () {
-        const inputField = document.getElementById("chatbot-text");
-        const message = inputField.value;
-        if (message.trim() !== "") {
-            const messageDiv = document.createElement("div");
-            messageDiv.textContent = "나: " + message;
-            document.getElementById("chatbot-messages").appendChild(messageDiv);
-            inputField.value = "";
-            setTimeout(() => {
-                const responseDiv = document.createElement("div");
-                responseDiv.textContent = "챗봇: 이건 예시 응답입니다.";
-                document.getElementById("chatbot-messages").appendChild(responseDiv);
-                document.getElementById("chatbot-messages").scrollTop = document.getElementById("chatbot-messages").scrollHeight;
-            }, 1000);
-        }
-    };
-
     const titleElement = document.querySelector('.fc-toolbar-title');
     if (titleElement) {
         titleElement.style.cursor = 'pointer';

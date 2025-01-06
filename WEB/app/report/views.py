@@ -1,7 +1,9 @@
 import os
+import uuid
 from django.http import StreamingHttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.timezone import now, make_aware, utc
+from django.contrib import messages
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -31,11 +33,26 @@ def user_input(request):
 
     동작 방식:
     1. GET 요청: 사용자 ID 입력 폼을 표시
-    2. POST 요청: 입력된 user_id로 캘린더 페이지로 리디렉션
+    2. POST 요청: 입력된 user_id를 검증 후 캘린더 페이지로 리디렉션
     """
     if request.method == "POST":
         user_id = request.POST.get("user_id")
-        return redirect("calendar", user_id=user_id)
+
+        # UUID 형식 검증
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except (ValueError, TypeError):
+            messages.error(request, "잘못된 UUID 형식입니다. 올바른 형식을 입력해주세요.")
+            return render(request, "report/user_input.html")
+
+        # DB 존재 여부 확인
+        if not TestHistory.objects.filter(user_id=user_uuid).exists():
+            messages.error(request, "해당 사용자 ID가 존재하지 않습니다.")
+            return render(request, "report/user_input.html")
+
+        # 검증 성공 시 리디렉션
+        return redirect("calendar", user_id=user_uuid)
+
     return render(request, "report/user_input.html")
 
 
@@ -235,7 +252,7 @@ class StreamingDailyReportAPI(APIView):
         - 학습 성과 분석
         - 개선을 위한 제안
         - 동기부여 메시지
-        - 학습이 부족한 코드명만 출력
+        - 학습이 부족한 코드명(mCode)
 
         # 필수
         초등학생 1,2학년 수준으로 작성하세요.! 150자 이내로 작성하세요.
@@ -314,8 +331,10 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
-# driver = GraphDatabase.driver("bolt://172.18.0.3:7687", auth=(username, "1234qwer"))
-driver = GraphDatabase.driver(uri, auth=(username, password))
+driver = GraphDatabase.driver(
+    "bolt://host.docker.internal:7687", auth=(username, "1234qwer")
+)
+# driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
 print("neo4j : ", uri, username, password)
@@ -341,47 +360,100 @@ def get_graph_data():
         links = []
         node_ids = set()
 
+        # 노드 유형별 색상 매핑
+        node_colors = {
+            "Achievement": "#f0d364",
+            "LChapter": "#e8b1f5",
+            "MChapter": "#a1c4f4",
+            "SChapter": "#c2d59b",
+            "TChapter": "#a8e8d4",
+            "Subject": "#f5989d",
+        }
+
         for record in result:
             n = record["n"]
             m = record["m"]
             r = record["r"]
 
+            # 디버깅: 노드 속성 확인
+            print("[DEBUG] 노드 속성:", dict(n))
+
             # 노드 추가 (시작 노드)
-            if n.id not in node_ids:
+            n_id = n.get("id", n.element_id)  # id 속성 또는 element_id 사용
+            if n_id not in node_ids:
+                label = (
+                    _get_achievement_label(n)
+                    if "Achievement" in n.labels
+                    else n.get("name", "Unknown")
+                )
+                color = _get_node_color(n.labels, node_colors)
+                if color == "#999":
+                    print(f"[DEBUG] 레이블 매핑 누락: {n.labels}")
                 nodes.append(
                     {
-                        "id": n.id,
-                        "label": n.get("label", "Unknown"),
-                        "color": n.get("color", "#999"),
-                        "properties": {"id": n.get("id"), "label": n.get("label")},
+                        "id": n_id,
+                        "label": label,  # Achievement 노드는 code를 사용
+                        "color": color,  # 노드 색상 설정
+                        "properties": dict(n),  # 모든 속성 포함
                     }
                 )
-                node_ids.add(n.id)
+                node_ids.add(n_id)
 
             # 노드 추가 (끝 노드)
-            if m.id not in node_ids:
+            m_id = m.get("id", m.element_id)  # id 속성 또는 element_id 사용
+            if m_id not in node_ids:
+                label = (
+                    _get_achievement_label(m)
+                    if "Achievement" in m.labels
+                    else m.get("name", "Unknown")
+                )
+                color = _get_node_color(m.labels, node_colors)
+                if color == "#999":
+                    print(f"[DEBUG] 레이블 매핑 누락: {m.labels}")
                 nodes.append(
                     {
-                        "id": m.id,
-                        "label": m.get("label", "Unknown"),
-                        "color": m.get("color", "#999"),
-                        "properties": {"id": m.get("id"), "label": m.get("label")},
+                        "id": m_id,
+                        "label": label,
+                        "color": color,
+                        "properties": dict(m),
                     }
                 )
-                node_ids.add(m.id)
+                node_ids.add(m_id)
 
             # 관계 데이터 추가
             links.append(
                 {
-                    "source": n.id,
-                    "target": m.id,
-                    "type": r.type,
-                    "color": r.get("color", "#999"),
-                    "title": r.get("title", ""),
+                    "source": n_id,
+                    "target": m_id,
+                    "type": r.type,  # 관계 타입
+                    "color": "#999",  # 기본 색상 (필요시 관계 유형별 색상 매핑 가능)
+                    "title": r.get("name", ""),  # 관계 속성 name 사용
                 }
             )
 
         return {"nodes": nodes, "links": links}
+
+
+def _get_node_color(labels, color_mapping):
+    """
+    노드의 레이블을 기준으로 색상을 반환하는 함수
+    - labels: 노드 레이블 리스트
+    - color_mapping: 노드 유형별 색상 매핑 딕셔너리
+    """
+    for label in labels:
+        if label in color_mapping:
+            return color_mapping[label]
+    return "#999"  # 기본 색상
+
+
+def _get_achievement_label(node):
+    """
+    Achievement 노드의 레이블을 반환
+    - Achievement 노드는 `code` 속성을 레이블로 사용
+    """
+    if "code" in node:
+        return node["code"]
+    return "Achievement"
 
 
 def neo4j_view(request):
