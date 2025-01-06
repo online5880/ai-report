@@ -10,7 +10,7 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
 
         <!-- Custom CSS -->
-        <link rel="stylesheet" href="{% static 'report/css/styles.css' %}">
+        <link rel="stylesheet" href="{% static 'report/css/report.css' %}">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,6 +35,7 @@
         <div id="reportModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
+
                 <div id="llm-output">
                     리포트를 확인하려면 날짜를 클릭해주세요.
                 </div>
@@ -48,8 +49,7 @@
                 </div>
 
                 <!-- 정답률 변화 -->
-                <div id="accuracy-section" class="report-section">
-                    <h3>정답률 변화</h3>
+                <div id="chart-container">
                     <canvas id="accuracy-chart"></canvas>
                 </div>
 
@@ -83,7 +83,7 @@
         ];
         const userId = "{{ user_id }}";
     </script>
-    <script src="{% static 'report/js/scripts.js' %}"></script>
+    <script src="{% static 'report/js/report.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 </body>

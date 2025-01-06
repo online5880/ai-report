@@ -43,4 +43,8 @@ urlpatterns = [
     ),
     path("neo4j/", views.neo4j_view, name="neo4j_view"),
     path("graph/", views.graph_view, name="graph"),
+    path(
+        "api/correct-rate/", views.CorrectRateAPIView.as_view(), name="correct-rate-api"
+    ),
+    path("api/accuracy/", views.AccuracyAPIView.as_view(), name="accuracy-api"),
 ]

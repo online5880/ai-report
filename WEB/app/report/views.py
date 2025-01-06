@@ -2,13 +2,16 @@ import os
 import uuid
 from django.http import StreamingHttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
-from django.utils.timezone import now, make_aware, utc
+from django.utils.timezone import now, make_aware, utc, timedelta, get_default_timezone
+from django.utils import timezone
 from django.contrib import messages
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 from datetime import datetime
+
 from user.models import TestHistory, DailyReport
 from langchain_openai import ChatOpenAI  # LangChain OpenAI 통합
 from langchain_core.output_parsers import StrOutputParser
@@ -375,9 +378,6 @@ def get_graph_data():
             m = record["m"]
             r = record["r"]
 
-            # 디버깅: 노드 속성 확인
-            print("[DEBUG] 노드 속성:", dict(n))
-
             # 노드 추가 (시작 노드)
             n_id = n.get("id", n.element_id)  # id 속성 또는 element_id 사용
             if n_id not in node_ids:
@@ -387,8 +387,6 @@ def get_graph_data():
                     else n.get("name", "Unknown")
                 )
                 color = _get_node_color(n.labels, node_colors)
-                if color == "#999":
-                    print(f"[DEBUG] 레이블 매핑 누락: {n.labels}")
                 nodes.append(
                     {
                         "id": n_id,
@@ -408,8 +406,6 @@ def get_graph_data():
                     else m.get("name", "Unknown")
                 )
                 color = _get_node_color(m.labels, node_colors)
-                if color == "#999":
-                    print(f"[DEBUG] 레이블 매핑 누락: {m.labels}")
                 nodes.append(
                     {
                         "id": m_id,
@@ -494,3 +490,221 @@ def graph_view(request):
     그래프 시각화 페이지를 렌더링하는 뷰 함수
     """
     return render(request, "report/graph.html")
+
+
+class CorrectRateAPIView(APIView):
+    """
+    특정 날짜의 정답률을 계산하는 API
+    """
+
+    @swagger_auto_schema(
+        operation_summary="특정 날짜 정답률 계산",
+        operation_description="사용자의 특정 날짜 정답률 (정답 수 / 전체 문제 수)을 계산합니다.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "user_id": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="사용자 ID (UUID 형식)",
+                ),
+                "target_date": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_DATE,
+                    description="기준 날짜 (YYYY-MM-DD)",
+                ),
+            },
+            required=["user_id", "target_date"],
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "correct_rate": openapi.Schema(
+                        type=openapi.TYPE_NUMBER,
+                        format=openapi.FORMAT_FLOAT,
+                        description="정답률 (소수점 비율)",
+                    ),
+                    "total_questions": openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description="총 문제 수",
+                    ),
+                    "correct_answers": openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description="정답 개수",
+                    ),
+                },
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "error": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="오류 메시지",
+                    ),
+                },
+            ),
+        },
+    )
+    def post(self, request):
+        data = request.data
+
+        # 요청 데이터 유효성 검증
+        user_id = data.get("user_id")
+        target_date = data.get("target_date")
+
+        if not user_id or not target_date:
+            return Response(
+                {"error": "user_id와 target_date는 필수입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # 기준 날짜의 시작과 끝 시간 계산
+            target_date = datetime.strptime(target_date, "%Y-%m-%d")
+            start_datetime = timezone.make_aware(
+                target_date
+            )  # naive datetime을 aware datetime으로 변환
+            end_datetime = start_datetime + timedelta(days=1)
+
+            # 특정 날짜의 데이터 필터링
+            records = TestHistory.objects.filter(
+                user_id=user_id, cre_date__range=[start_datetime, end_datetime]
+            )
+
+            total_questions = records.count()
+            correct_answers = records.filter(correct="O").count()
+
+            if total_questions == 0:
+                return Response(
+                    {"correct_rate": 0, "total_questions": 0, "correct_answers": 0},
+                    status=status.HTTP_200_OK,
+                )
+
+            # 정답률 계산
+            correct_rate = correct_answers / total_questions
+
+            # 응답 데이터
+            return Response(
+                {
+                    "correct_rate": correct_rate,
+                    "total_questions": total_questions,
+                    "correct_answers": correct_answers,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AccuracyAPIView(APIView):
+    """
+    기준 날짜를 포함한 5일간의 정답률 데이터를 반환하는 API
+    """
+
+    @swagger_auto_schema(
+        operation_summary="5일간의 정답률 데이터 조회",
+        operation_description="기준 날짜를 포함하여 총 5일간의 정답률 데이터를 반환합니다.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "user_id": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="사용자 ID (UUID 형식)",
+                ),
+                "target_date": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_DATE,
+                    description="기준 날짜 (YYYY-MM-DD 형식)",
+                ),
+            },
+            required=["user_id", "target_date"],
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "labels": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_STRING),
+                        description="5일간의 요일 레이블 (['월', '화', '수', '목', '금'])",
+                    ),
+                    "data": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_NUMBER),
+                        description="5일간의 정답률 데이터 (소수점 포함 비율, [%])",
+                    ),
+                },
+                description="정답률 데이터",
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "error": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="에러 메시지",
+                    ),
+                },
+                description="잘못된 요청",
+            ),
+        },
+    )
+    def post(self, request):
+        data = request.data
+        user_id = data.get("user_id")
+        target_date = data.get("target_date")
+
+        if not user_id or not target_date:
+            return Response(
+                {"error": "user_id와 target_date는 필수입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # 기준 날짜 설정
+            target_date = datetime.strptime(target_date, "%Y-%m-%d")
+            labels = ["월", "화", "수", "목", "금"]
+            accuracy_data = []
+
+            for i in range(-2, 3):  # 기준 날짜 포함 총 5일
+                day = target_date + timedelta(days=i)
+
+                # 하루의 시작과 끝을 타임존과 함께 설정
+                start_datetime = make_aware(
+                    datetime.combine(day, datetime.min.time()), get_default_timezone()
+                )
+                end_datetime = make_aware(
+                    datetime.combine(day, datetime.max.time()), get_default_timezone()
+                )
+
+                # 데이터 필터링
+                records = TestHistory.objects.filter(
+                    user_id=user_id, cre_date__range=[start_datetime, end_datetime]
+                )
+
+                # 총 시도 횟수와 정답 개수 계산
+                total_questions = records.count()
+                correct_answers = records.filter(
+                    correct__iexact="O"
+                ).count()  # 대소문자 구분 없이 필터링
+
+                # 디버깅 로그 추가
+                print(
+                    f"Date: {day}, Total: {total_questions}, Correct: {correct_answers}"
+                )
+
+                # 정답률 계산
+                if total_questions > 0:
+                    accuracy = (correct_answers / total_questions) * 100
+                else:
+                    accuracy = 0
+
+                # 정답률 데이터 추가
+                accuracy_data.append(round(accuracy, 2))  # 소수점 두 자리까지
+
+            return Response(
+                {"labels": labels, "data": accuracy_data}, status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
