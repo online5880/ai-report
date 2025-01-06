@@ -1,12 +1,7 @@
 import torch
-import mlflow.pytorch
 import os
 import sys
-from config import BASE_DIR, MLFLOW_TRACKING_URI
-
-mlflow.set_tracking_uri(
-    MLFLOW_TRACKING_URI
-)
+from .config import BASE_DIR, MODEL_PATH
 
 sys.path.insert(0, os.path.join(BASE_DIR, "model"))
 
@@ -17,8 +12,9 @@ def load_model():
     Returns:
         torch.nn.Module: 로드된 PyTorch 모델.
     """
-    logged_model = "runs:/446b1a8e75ff4263a59f168a5605ba90/best_model"
-    model = mlflow.pytorch.load_model(logged_model, map_location=torch.device("cpu"))
+    # logged_model = "runs:/446b1a8e75ff4263a59f168a5605ba90/best_model"
+    # model = mlflow.pytorch.load_model(logged_model, map_location=torch.device("cpu"))
+    model = torch.load(MODEL_PATH, map_location=torch.device("cpu"))
     model.eval()
     return model
 
