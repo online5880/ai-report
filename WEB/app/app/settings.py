@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "neo4j",
     "drf_yasg",
+    'quiz',
 ]
 
 MIDDLEWARE = [

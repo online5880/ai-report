@@ -1,0 +1,49 @@
+<form id="quizForm" method="post">
+    {% csrf_token %}
+    {% for question in questions %}
+        <p>{{ forloop.counter }}. {{ question.text }}</p>
+        {% for choice in question.choices.all %}
+            <label>
+                <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}">
+                {{ choice.text }}
+            </label><br>
+        {% endfor %}
+    {% endfor %}
+    <button type="submit">제출</button>
+</form>
+
+<script>
+    const form = document.getElementById('quizForm');
+    const userId = "{{ user_id }}"; // Django 템플릿 변수를 JavaScript 변수로 할당
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        try {
+            const response = await fetch(location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+                body: new URLSearchParams(data),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(`형성평가 완료! 점수: ${result.score} / ${result.total}`);
+                window.location.href = `/calendar/${userId}/`; // 캘린더로 리다이렉트
+            } else {
+                alert('형성평가 제출에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    });
+</script>

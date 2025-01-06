@@ -18,6 +18,12 @@
 <body>
     <h1>{{ user_id }}의 캘린더</h1>
 
+    <div id="month-selector" style="margin-bottom: 20px;">
+        <a href="/{{ user_id }}/quiz/">
+            <button style="padding: 10px 20px; font-size: 16px;">형성평가 시작</button>
+        </a>
+    </div>
+
     <!-- 월 선택 버튼 -->
     <div id="month-selector" style="margin-bottom: 20px;">
         {% for month in months %}
@@ -30,6 +36,8 @@
         <div id="calendar-container">
             <div id="calendar"></div>
         </div>
+
+        
 
         <!-- 모달 추가 -->
         <div id="reportModal" class="modal">
