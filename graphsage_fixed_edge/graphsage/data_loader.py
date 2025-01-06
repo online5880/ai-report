@@ -3,8 +3,13 @@ import dgl
 import torch
 import numpy as np
 
-def load_graph(json_path="graph_schema.json"):
+def load_graph(json_path):
     """그래프 정보(노드-특성 포함함, 엣지)가 담긴 JSON 파일로부터 DGL 그래프를 로드"""
+    print(f"Attempting to load graph from: {json_path}")  # 디버깅 로그
+
+    if not json_path:
+        raise ValueError("JSON 파일 경로가 제공되지 않았습니다.")
+
     with open(json_path, "r") as file:
         data = json.load(file)
 
@@ -15,6 +20,7 @@ def load_graph(json_path="graph_schema.json"):
     id_to_idx = {node["id"]: idx for idx, node in enumerate(nodes)}
 
     # 매핑 정보 저장
+    print("Saving ID mapping files...")  # 디버깅 로그
     with open("id_to_idx.json", "w") as f:
         json.dump(id_to_idx, f)
     with open("idx_to_id.json", "w") as f:
@@ -40,4 +46,5 @@ def load_graph(json_path="graph_schema.json"):
     g.ndata['features'] = valid_node_features
 
     return g
+
 
