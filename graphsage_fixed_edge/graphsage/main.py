@@ -64,9 +64,9 @@ def main():
     train_model(model, g, features, epochs=500, lr=0.001)
 
     # 3. 학습된 모델 저장 및 노드 임베딩 계산
-    torch.save(model.state_dict(), "./trained_model.pth")
+    torch.save(model.state_dict(), "model/trained_model.pth")
     embeddings = model(g, features).detach().numpy()
-    np.save("./trained_node_embeddings.npy", embeddings)
+    np.save("model/trained_node_embeddings.npy", embeddings)
 
     # 4. AUC 계산
     auc = compute_auc(model, g, features)

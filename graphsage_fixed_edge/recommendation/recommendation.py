@@ -7,10 +7,8 @@ def recommend_concepts(target_concept_id, similarities, id_to_idx, idx_to_id, le
     """
     타겟 개념에 대해 유사도가 높은 개념 추천
     """
-    if target_concept_id not in id_to_idx:
-        raise ValueError(f"타겟 개념 ID {target_concept_id}가 존재하지 않습니다.")
-    if target_concept_id not in learning_order:
-        raise ValueError(f"타겟 개념 ID {target_concept_id}의 학습 순서 정보가 없습니다.")
+    if target_concept_id not in id_to_idx or target_concept_id not in learning_order:
+        return [], []
     
     target_idx = id_to_idx[target_concept_id]
 
@@ -82,13 +80,6 @@ def process_predictions(predictions, similarities, id_to_idx, idx_to_id, learnin
 
     return grouped_recommendations
 
-def map_low_confidence_to_names(low_confidence_concepts, lecture_df_path):
-    """
-    f_mchapter_id와 low_confidence_concepts를 매핑하여 f_mchapter_nm 값만 반환
-    """
-    lecture_df = pd.read_csv(lecture_df_path)
-    filtered_df = lecture_df[lecture_df['f_mchapter_id'].isin(low_confidence_concepts)]
-    return filtered_df['f_mchapter_nm'].tolist()
 
 def map_recommendations_to_lecture_data(grouped_recommendations, lecture_df_path):
     """
@@ -118,11 +109,11 @@ def map_recommendations_to_lecture_data(grouped_recommendations, lecture_df_path
 
 if __name__ == "__main__":
     # 학습된 임베딩 파일 경로
-    embedding_file = "models/trained_node_embeddings.npy"
-    id_to_idx_file = "data/id_to_idx.json"
-    idx_to_id_file = "data/idx_to_id.json"
-    learning_order_file = "data/learning_order.json"
-    lecture_df_path = "data/lecture_df.csv"
+    embedding_file = "../models/trained_node_embeddings.npy"
+    id_to_idx_file = "../fastapi_app/data/id_to_idx.json"
+    idx_to_id_file = "../fastapi_app/data/idx_to_id.json"
+    learning_order_file = "../fastapi_app/data/learning_order.json"
+    lecture_df_path = "../fastapi_app/data/lecture_df.csv"
     
     
     # graph 생성 시 배치된 인덱스와 행렬 계산 때 배정된 인덱스 매핑
