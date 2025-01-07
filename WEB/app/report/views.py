@@ -221,7 +221,7 @@ class StreamingDailyReportAPI(APIView):
         # 학습 기록 조회
         histories = TestHistory.objects.filter(
             user_id=user_id, cre_date__range=(start_date, end_date)
-        ).values("m_code", "quiz_code", "answer", "correct")
+        ).values("m_code", "quiz_code", "correct")
 
         print("SQL Query:", histories.query)  # SQL 쿼리 디버깅
 
@@ -237,7 +237,7 @@ class StreamingDailyReportAPI(APIView):
         record_details = "\n".join(
             [
                 f"모듈: {record['m_code']}, 퀴즈: {record['quiz_code']}, "
-                f"답변: {record['answer']}, 정답 여부: {record['correct']}"
+                f"정답 여부: {record['correct']}"
                 for record in histories
             ]
         )
@@ -342,10 +342,11 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
+driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(username, "bigdata9-"))
 # driver = GraphDatabase.driver(
-#     "bolt://host.docker.internal:7687", auth=(username, "bigdata9-")
+#     "bolt://localhost:7687", auth=(username, "bigdata9-")
 # )
-driver = GraphDatabase.driver(uri, auth=(username, password))
+# driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
 print("neo4j : ", uri, username, password)
@@ -366,20 +367,15 @@ def get_graph_data():
     with driver.session() as session:
         query = "MATCH (n)-[r]->(m) RETURN n, r, m"
         result = session.run(query)
+        print("query : ", query)
+        print("result : ", result)
 
         nodes = []
         links = []
         node_ids = set()
 
-        # 노드 유형별 색상 매핑
-        node_colors = {
-            "Achievement": "#f0d364",
-            "LChapter": "#e8b1f5",
-            "MChapter": "#a1c4f4",
-            "SChapter": "#c2d59b",
-            "TChapter": "#a8e8d4",
-            "Subject": "#f5989d",
-        }
+        # 데이터에서 사용될 기본 색상
+        default_color = "#999"
 
         for record in result:
             n = record["n"]
@@ -389,17 +385,11 @@ def get_graph_data():
             # 노드 추가 (시작 노드)
             n_id = n.get("id", n.element_id)  # id 속성 또는 element_id 사용
             if n_id not in node_ids:
-                label = (
-                    _get_achievement_label(n)
-                    if "Achievement" in n.labels
-                    else n.get("name", "Unknown")
-                )
-                color = _get_node_color(n.labels, node_colors)
                 nodes.append(
                     {
                         "id": n_id,
-                        "label": label,  # Achievement 노드는 code를 사용
-                        "color": color,  # 노드 색상 설정
+                        "label": n.get("f_mchapter_nm", "Unknown"),
+                        "color": n.get("color", default_color),
                         "properties": dict(n),  # 모든 속성 포함
                     }
                 )
@@ -408,17 +398,11 @@ def get_graph_data():
             # 노드 추가 (끝 노드)
             m_id = m.get("id", m.element_id)  # id 속성 또는 element_id 사용
             if m_id not in node_ids:
-                label = (
-                    _get_achievement_label(m)
-                    if "Achievement" in m.labels
-                    else m.get("name", "Unknown")
-                )
-                color = _get_node_color(m.labels, node_colors)
                 nodes.append(
                     {
                         "id": m_id,
-                        "label": label,
-                        "color": color,
+                        "label": m.get("f_mchapter_nm", "Unknown"),
+                        "color": m.get("color", default_color),
                         "properties": dict(m),
                     }
                 )
@@ -430,8 +414,8 @@ def get_graph_data():
                     "source": n_id,
                     "target": m_id,
                     "type": r.type,  # 관계 타입
-                    "color": "#999",  # 기본 색상 (필요시 관계 유형별 색상 매핑 가능)
-                    "title": r.get("name", ""),  # 관계 속성 name 사용
+                    "color": r.get("color", default_color),  # 관계 색상
+                    "title": r.get("title", ""),  # 관계 속성 title 사용
                 }
             )
 
@@ -488,6 +472,7 @@ class KnowledgeGraphAPI(APIView):
     def get(self, request):
         try:
             graph_data = get_graph_data()
+            print("graph_data : ", graph_data)
             return JsonResponse(graph_data)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
@@ -705,6 +690,8 @@ class AccuracyAPIView(APIView):
                 # 정답률 데이터 추가
                 accuracy_data.append(round(accuracy, 2))  # 소수점 두 자리까지
 
+                print(accuracy_data)
+
             return Response(
                 {"labels": labels, "data": accuracy_data}, status=status.HTTP_200_OK
             )
@@ -768,31 +755,31 @@ class GraphDataAPIView(APIView):
         """
         # Neo4j 연결 설정
         graph = Neo4jGraph(
-            url="bolt://host.docker.internal:7687",
+            url="bolt://neo4j:7687",
             username="neo4j",
             password="bigdata9-",
         )
 
-        # LangChain 설정
-        llm = ChatOpenAI(temperature=0, model="gpt-4o-2024-11-20")
-        chain = GraphCypherQAChain.from_llm(
-            llm=llm,
-            graph=graph,
-            verbose=True,
-            allow_dangerous_requests=True,
-            return_direct=True,
-        )
-
         # 요청 데이터에서 메시지 가져오기
-        message = """
-        mchapter_id 를 검색가까운 노드들을 찾아주세요. 링크도 이어주세요.
-        """
-        message += request.data.get("message", "")
+        message = request.data.get("message", "").strip()
 
         if not message:
             return Response(
                 {"error": "message 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
             )
+
+        # LangChain 설정
+        llm = ChatOpenAI(temperature=0, model="gpt-4o-2024-11-20")
+        chain = GraphCypherQAChain.from_llm(
+            cypher_llm=llm,
+            qa_llm=llm,
+            validate_cypher=True,
+            graph=graph,
+            verbose=True,
+            return_intermediate_steps=True,
+            return_direct=True,
+            allow_dangerous_requests=True,
+        )
 
         try:
             # Cypher 쿼리 실행
@@ -810,51 +797,71 @@ class GraphDataAPIView(APIView):
             links = []
             node_ids = set()
 
-            # print("Raw Data:", raw_data)  # 디버깅
-
             # 데이터 처리
             for record in raw_data:
-                l = record.get("l")
-                m = record.get("m")
-                s = record.get("s")
+                node = record.get("n")
+                if not node:
+                    continue
 
-                # 노드 추가
-                for node, node_type in [(l, "l"), (m, "m"), (s, "s")]:
-                    if node and node.get("id") not in node_ids:
-                        nodes.append(
+                node_id = node.get("id")
+                if node_id and node_id not in node_ids:
+                    # 노드 추가
+                    nodes.append(
+                        {
+                            "id": node_id,
+                            "label": node.get("f_mchapter_nm", "Unknown"),
+                            "properties": node,
+                            "color": node.get("color", "#000000"),  # 기본값 검정색
+                        }
+                    )
+                    node_ids.add(node_id)
+
+            # 노드 정렬 (f_lchapter_id 또는 id를 기준으로 정렬)
+            nodes.sort(key=lambda x: (x["properties"].get("f_lchapter_id"), x["id"]))
+
+            # i+1 연결 생성 (제한 조건 추가)
+            for i in range(len(nodes) - 1):
+                if nodes[i]["properties"].get("f_lchapter_id") == nodes[i + 1][
+                    "properties"
+                ].get("f_lchapter_id"):
+                    links.append(
+                        {
+                            "source": nodes[i]["id"],
+                            "target": nodes[i + 1]["id"],
+                            "type": "RELATES_TO",
+                        }
+                    )
+
+            # 추가 연결 조건 (area 및 f_lchapter_nm 기준)
+            for source_node in nodes:
+                for target_node in nodes:
+                    if (
+                        source_node["id"] != target_node["id"]
+                        and source_node["properties"].get("area")
+                        == target_node["properties"].get("area")
+                        and (
+                            source_node["properties"]
+                            .get("f_lchapter_nm")
+                            .startswith("5.")
+                            or target_node["properties"]
+                            .get("f_lchapter_nm")
+                            .startswith("5.")
+                        )
+                    ):
+                        links.append(
                             {
-                                "id": node.get("id"),
-                                "label": node.get("name", "Unknown"),
-                                "properties": node,
-                                "type": node_type,
-                                "color": self.get_node_color(node_type),
+                                "source": source_node["id"],
+                                "target": target_node["id"],
+                                "type": "RELATES_TO",
                             }
                         )
-                        node_ids.add(node.get("id"))
-
-                # 링크 추가
-                if l and m:
-                    links.append(
-                        {
-                            "source": l.get("id"),
-                            "target": m.get("id"),
-                            "type": "CONTAINS",
-                        }
-                    )
-                if m and s:
-                    links.append(
-                        {
-                            "source": m.get("id"),
-                            "target": s.get("id"),
-                            "type": "CONTAINS",
-                        }
-                    )
 
             # 중복된 링크 제거
             unique_links = list(
                 {(link["source"], link["target"]): link for link in links}.values()
             )
-
+            print("query : ", query)
+            print("unique_links : ", unique_links)
             return Response(
                 {"query": query, "nodes": nodes, "links": unique_links},
                 status=status.HTTP_200_OK,
@@ -864,14 +871,3 @@ class GraphDataAPIView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    def get_node_color(self, node_type):
-        """
-        노드 타입에 따른 색상을 반환하는 함수
-        """
-        color_map = {
-            "l": "#69b3a2",  # l 노드 색상
-            "m": "#ff6347",  # m 노드 색상
-            "s": "#ffcc00",  # s 노드 색상
-        }
-        return color_map.get(node_type, "#0000ff")  # 기본 색상은 파란색

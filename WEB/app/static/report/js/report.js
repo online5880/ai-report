@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const graphData = await response.json();
 
             const width = document.getElementById('knowledge-graph').clientWidth;
-            const height = 400;
+            const height = 750;
 
             // SVG 요소 생성
             const svg = d3.select('#knowledge-graph')
@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // 시뮬레이션 설정
             const simulation = d3.forceSimulation(graphData.nodes)
                 .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(50))
-                .force('charge', d3.forceManyBody().strength(-100))
+                .force('charge', d3.forceManyBody().strength(-15))
                 .force('center', d3.forceCenter(width / 2, height / 2));
 
             // 링크 그리기
@@ -312,10 +312,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 .append('circle')
                 .attr('r', 8)
                 .attr('fill', d => d.color)
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended));
+                // 드래그 비활성화
+                // .call(d3.drag()
+                //     .on('start', dragstarted)
+                //     .on('drag', dragged)
+                //     .on('end', dragended));
 
             // 노드 레이블
             const label = svg.append('g')
