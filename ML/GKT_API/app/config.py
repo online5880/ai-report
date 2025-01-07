@@ -18,3 +18,12 @@ LOCAL_PARQUET_PATH = "/code/app/filtered_combined_user_data.parquet"
 # S3 정보
 S3_BUCKET = "big9-project-01"
 S3_FILE_KEY = "data/tbl_app_testhisdtl/filtered_combined_user_data.parquet"
+
+# AWS RDS 연결 정보 설정
+DB_CONFIG = {
+    "host": "bigdata-team-01.cfsgom2iusui.ap-northeast-2.rds.amazonaws.com",  # RDS 엔드포인트
+    "port": 5432,                               # PostgreSQL 기본 포트
+    "database": "math_db",                # 데이터베이스 이름
+    "user": "postgres",                    # 사용자 이름
+    "password": "bigdata9-",                # 비밀번호
+}

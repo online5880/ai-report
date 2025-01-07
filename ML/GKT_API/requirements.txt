@@ -6,3 +6,4 @@ gunicorn
 python-dotenv
 boto3
 polars
+psycopg2-binary

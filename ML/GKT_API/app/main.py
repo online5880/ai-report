@@ -3,12 +3,12 @@ from pydantic import BaseModel
 import polars as pl
 import time
 from .model_utils import load_model, predict_model
-from .s3_utils import get_parquet_file
+from .AWS_utils import get_rds_data
 from .data_utils import prepare_data
-from .config import BASE_DIR, LOCAL_PARQUET_PATH, S3_BUCKET, S3_FILE_KEY
+from .config import DB_CONFIG
 
 # 모델 및 데이터 로드
-data = get_parquet_file(LOCAL_PARQUET_PATH, S3_BUCKET, S3_FILE_KEY)
+# data = get_rds_data(db_config = DB_CONFIG)
 model = load_model()
 
 # FastAPI 인스턴스 생성
@@ -30,8 +30,8 @@ async def predict(input_data: InputData):
         start_time = time.time()
 
         # 유저 데이터 필터링
-        user_data = data.filter(pl.col("UserID") == input_data.user_id)
-        user_data = user_data.sort("CreDate")
+        user_data = get_rds_data(db_config = DB_CONFIG, user_id = input_data.user_id)
+        user_data = user_data.sort("cre_date")
 
         # 스킬 매핑
         skill_map = user_data["f_mchapter_id"].unique().sort().to_list()
@@ -44,10 +44,10 @@ async def predict(input_data: InputData):
             .alias("skill")
         )
         user_data = user_data.with_columns(
-            pl.col("Correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("Correct")
+            pl.col("correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("correct")
         )
         user_data = user_data.with_columns(
-            (pl.col("skill") * 2 + pl.col("Correct")).alias("skill_with_answer")
+            (pl.col("skill") * 2 + pl.col("correct")).alias("skill_with_answer")
         )
 
         # 입력 데이터 변환
@@ -77,9 +77,9 @@ async def predict(input_data: InputData):
 @app.post("/api/gkt/confusion-matrix")
 async def get_confusion_matrix(input_data: InputData):
     try:
-        threshold = 0.70
-        user_data = data.filter(pl.col("UserID") == input_data.user_id)
-        user_data = user_data.sort("CreDate")
+        threshold = 0.75
+        user_data = get_rds_data(db_config = DB_CONFIG, user_id = input_data.user_id)
+        user_data = user_data.sort("cre_date")
 
         # 스킬 매핑
         skill_map = user_data["f_mchapter_id"].unique().sort().to_list()
@@ -92,10 +92,10 @@ async def get_confusion_matrix(input_data: InputData):
             .alias("skill")
         )
         user_data = user_data.with_columns(
-            pl.col("Correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("Correct")
+            pl.col("correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("correct")
         )
         user_data = user_data.with_columns(
-            (pl.col("skill") * 2 + pl.col("Correct")).alias("skill_with_answer")
+            (pl.col("skill") * 2 + pl.col("correct")).alias("skill_with_answer")
         )
 
         next_skills = [skill_map_dict.get(skill, -1) for skill in input_data.skill_list]
