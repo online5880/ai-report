@@ -24,6 +24,9 @@ from dotenv import load_dotenv
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
+from langchain.chains import GraphCypherQAChain
+from langchain_community.graphs import Neo4jGraph
+
 load_dotenv()
 
 
@@ -239,6 +242,11 @@ class StreamingDailyReportAPI(APIView):
             ]
         )
 
+        print(
+            "record details ==============================================================",
+            [record["quiz_code"] for record in histories],
+        )
+
         # AI 프롬프트 생성
         prompt = f"""
         사용자 학습 일일 리포트
@@ -334,10 +342,10 @@ def clean_env_var(var):
 uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
 username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
-driver = GraphDatabase.driver(
-    "bolt://host.docker.internal:7687", auth=(username, "1234qwer")
-)
-# driver = GraphDatabase.driver(uri, auth=(username, password))
+# driver = GraphDatabase.driver(
+#     "bolt://host.docker.internal:7687", auth=(username, "bigdata9-")
+# )
+driver = GraphDatabase.driver(uri, auth=(username, password))
 
 
 print("neo4j : ", uri, username, password)
@@ -688,11 +696,6 @@ class AccuracyAPIView(APIView):
                     correct__iexact="O"
                 ).count()  # 대소문자 구분 없이 필터링
 
-                # 디버깅 로그 추가
-                print(
-                    f"Date: {day}, Total: {total_questions}, Correct: {correct_answers}"
-                )
-
                 # 정답률 계산
                 if total_questions > 0:
                     accuracy = (correct_answers / total_questions) * 100
@@ -708,3 +711,167 @@ class AccuracyAPIView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GraphDataAPIView(APIView):
+    """
+    Neo4j 그래프 데이터를 가져오는 API
+    """
+
+    @swagger_auto_schema(
+        operation_summary="Neo4j 그래프 데이터 조회",
+        operation_description="Cypher 쿼리를 실행하여 그래프 데이터를 반환합니다.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "message": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="질문 또는 요청 메시지",
+                )
+            },
+            required=["message"],
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "query": openapi.Schema(
+                        type=openapi.TYPE_STRING, description="실행된 Cypher 쿼리"
+                    ),
+                    "nodes": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_OBJECT),
+                        description="노드 데이터",
+                    ),
+                    "links": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(type=openapi.TYPE_OBJECT),
+                        description="링크 데이터",
+                    ),
+                },
+                description="그래프 데이터 응답",
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "error": openapi.Schema(
+                        type=openapi.TYPE_STRING, description="에러 메시지"
+                    )
+                },
+                description="잘못된 요청",
+            ),
+        },
+    )
+    def post(self, request):
+        """
+        POST 요청으로 Cypher 쿼리를 실행하고 그래프 데이터를 반환합니다.
+        """
+        # Neo4j 연결 설정
+        graph = Neo4jGraph(
+            url="bolt://host.docker.internal:7687",
+            username="neo4j",
+            password="bigdata9-",
+        )
+
+        # LangChain 설정
+        llm = ChatOpenAI(temperature=0, model="gpt-4o-2024-11-20")
+        chain = GraphCypherQAChain.from_llm(
+            llm=llm,
+            graph=graph,
+            verbose=True,
+            allow_dangerous_requests=True,
+            return_direct=True,
+        )
+
+        # 요청 데이터에서 메시지 가져오기
+        message = """
+        mchapter_id 를 검색가까운 노드들을 찾아주세요. 링크도 이어주세요.
+        """
+        message += request.data.get("message", "")
+
+        if not message:
+            return Response(
+                {"error": "message 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Cypher 쿼리 실행
+            result = chain.invoke(message)
+
+            # 결과 구조 확인
+            if isinstance(result, dict) and "query" in result and "result" in result:
+                query = result["query"]
+                raw_data = result["result"]
+            else:
+                raise ValueError("Unexpected result format from LangChain.")
+
+            # 노드와 링크 데이터 처리
+            nodes = []
+            links = []
+            node_ids = set()
+
+            # print("Raw Data:", raw_data)  # 디버깅
+
+            # 데이터 처리
+            for record in raw_data:
+                l = record.get("l")
+                m = record.get("m")
+                s = record.get("s")
+
+                # 노드 추가
+                for node, node_type in [(l, "l"), (m, "m"), (s, "s")]:
+                    if node and node.get("id") not in node_ids:
+                        nodes.append(
+                            {
+                                "id": node.get("id"),
+                                "label": node.get("name", "Unknown"),
+                                "properties": node,
+                                "type": node_type,
+                                "color": self.get_node_color(node_type),
+                            }
+                        )
+                        node_ids.add(node.get("id"))
+
+                # 링크 추가
+                if l and m:
+                    links.append(
+                        {
+                            "source": l.get("id"),
+                            "target": m.get("id"),
+                            "type": "CONTAINS",
+                        }
+                    )
+                if m and s:
+                    links.append(
+                        {
+                            "source": m.get("id"),
+                            "target": s.get("id"),
+                            "type": "CONTAINS",
+                        }
+                    )
+
+            # 중복된 링크 제거
+            unique_links = list(
+                {(link["source"], link["target"]): link for link in links}.values()
+            )
+
+            return Response(
+                {"query": query, "nodes": nodes, "links": unique_links},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get_node_color(self, node_type):
+        """
+        노드 타입에 따른 색상을 반환하는 함수
+        """
+        color_map = {
+            "l": "#69b3a2",  # l 노드 색상
+            "m": "#ff6347",  # m 노드 색상
+            "s": "#ffcc00",  # s 노드 색상
+        }
+        return color_map.get(node_type, "#0000ff")  # 기본 색상은 파란색

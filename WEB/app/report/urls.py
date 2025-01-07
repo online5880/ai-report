@@ -47,4 +47,5 @@ urlpatterns = [
         "api/correct-rate/", views.CorrectRateAPIView.as_view(), name="correct-rate-api"
     ),
     path("api/accuracy/", views.AccuracyAPIView.as_view(), name="accuracy-api"),
+    path("api/graph-data/", views.GraphDataAPIView.as_view(), name="graph-data"),
 ]

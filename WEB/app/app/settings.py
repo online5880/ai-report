@@ -123,40 +123,40 @@ USE_TZ = True
 USE_S3 = bool(strtobool(os.getenv("USE_S3", "True")))
 print("USE S3 : ", USE_S3)
 
-# if USE_S3:
-#     # AWS S3 설정
-#     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-#     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-#     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-#     AWS_REGION = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")  # 기본값은 서울 리전
-#     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
-#     AWS_QUERYSTRING_AUTH = False  # URL 서명 제거
-#     AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}  # 캐시 설정
+if USE_S3:
+    # AWS S3 설정
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+    AWS_REGION = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")  # 기본값은 서울 리전
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
+    AWS_QUERYSTRING_AUTH = False  # URL 서명 제거
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}  # 캐시 설정
 
-#     # STORAGES 설정
-#     STORAGES = {
-#         "default": {
-#             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Media 파일 저장소
-#         },
-#         "staticfiles": {
-#             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Static 파일 저장소
-#         },
-#     }
+    # STORAGES 설정
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Media 파일 저장소
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",  # Static 파일 저장소
+        },
+    }
 
-#     # Static 및 Media 파일 URL
-#     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-#     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
-# else:
-# 로컬 개발 환경 설정
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",  # Media 파일 저장소
-        "LOCATION": os.path.join(BASE_DIR, "mediafiles"),
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # Static 파일 저장소
-    },
-}
+    # Static 및 Media 파일 URL
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+else:
+    # 로컬 개발 환경 설정
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",  # Media 파일 저장소
+            "LOCATION": os.path.join(BASE_DIR, "mediafiles"),
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # Static 파일 저장소
+        },
+    }
 
 # Static 및 Media 파일 URL
 STATIC_URL = "/static/"

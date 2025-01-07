@@ -7,3 +7,4 @@ exclude =
   /.github
 
 max-line-length = 999
+ignore = E741,W503

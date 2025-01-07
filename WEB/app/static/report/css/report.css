@@ -79,8 +79,8 @@ body, html {
 
 .close {
     position: absolute;
-    top: 1rem;
-    right: 1.5rem;
+    top: 0.25rem;
+    right: 0.75rem;
     font-size: 2rem;
     color: #64748b;
     transition: color 0.2s;

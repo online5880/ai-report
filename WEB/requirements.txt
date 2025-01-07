@@ -68,3 +68,4 @@ gunicorn
 django-cors-headers
 neo4j
 drf_yasg
+langchain-community
