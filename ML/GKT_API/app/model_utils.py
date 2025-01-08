@@ -12,7 +12,7 @@ def load_model():
     Returns:
         torch.nn.Module: 로드된 PyTorch 모델.
     """
-    
+    print(os.path.join(BASE_DIR, 'model.pth'))
     model = torch.load(os.path.join(BASE_DIR, 'model.pth'), map_location=torch.device("cpu"))
     model.eval()
     return model

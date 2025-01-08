@@ -81,7 +81,7 @@ async def predict(input_data: InputData):
 @app.post("/api/gkt/confusion-matrix")
 async def get_confusion_matrix(input_data: InputData):
     try:
-        threshold = 0.75
+        threshold = 0.5
         user_data = get_rds_data(db_config = DB_CONFIG, user_id = input_data.user_id)
         user_data = user_data.sort("cre_date")
 
