@@ -336,17 +336,17 @@ def clean_env_var(var):
     return var
 
 
-uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
-username = clean_env_var(os.getenv("NEO4J_USERNAME"))
-password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
-driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(username, "bigdata9-"))
+neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
+neo4j_username = clean_env_var(os.getenv("NEO4J_USERNAME"))
+neo4j_password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
+# driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(neo4j_username, "bigdata9-"))
 # driver = GraphDatabase.driver(
-#     "bolt://localhost:7687", auth=(username, "bigdata9-")
+#     "bolt://localhost:7687", auth=(neo4j_username, "bigdata9-")
 # )
-# driver = GraphDatabase.driver(uri, auth=(username, password))
+driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
 
 
-print("neo4j : ", uri, username, password)
+print("neo4j : ", neo4j_uri, neo4j_username, neo4j_password)
 
 
 def get_graph_data():
@@ -745,10 +745,12 @@ class GraphDataAPIView(APIView):
         """
         # Neo4j 연결 설정
         graph = Neo4jGraph(
-            url="bolt://neo4j:7687",
-            username="neo4j",
-            password="bigdata9-",
+            url=neo4j_uri,
+            neo4j_username=neo4j_username,
+            neo4j_password=neo4j_password,
         )
+
+        print("graph neo4j", graph.__dict__)
 
         # 요청 데이터에서 메시지 가져오기
         message = request.data.get("message", "").strip()
