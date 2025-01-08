@@ -1,0 +1,109 @@
+/* 기본 스타일 */
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f4f7f9;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+/* 퀴즈 폼 컨테이너 */
+#quizForm {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 문제 스타일 */
+.question {
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+/* 문제 번호와 텍스트 */
+.question p {
+    font-size: 1.1em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+/* 선택지 컨테이너 */
+.choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+/* 라디오 버튼 레이블 */
+label {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+label:hover {
+    background-color: #f0f7ff;
+    border-color: #3498db;
+}
+
+/* 라디오 버튼 커스텀 스타일 */
+input[type="radio"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #3498db;
+}
+
+/* 제출 버튼 */
+button[type="submit"] {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: 20px auto 0;
+    padding: 12px 24px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+button[type="submit"]:hover {
+    background-color: #2980b9;
+}
+
+button[type="submit"]:active {
+    transform: translateY(1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    #quizForm {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .question {
+        padding: 15px;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+    }
+}

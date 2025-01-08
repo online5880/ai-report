@@ -34,8 +34,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // goToMonth 함수를 window 객체에 등록
     window.goToMonth = function (month) {
-        const currentYear = new Date().getFullYear();
-        calendar.gotoDate(new Date(currentYear, month, 1));
+        const date = new Date();
+        date.setMonth(month);
+        calendar.gotoDate(date);
     };
 
     // 모달 관련 코드
@@ -229,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     scales: {
                         y: {
                             beginAtZero: true,
-                            suggestedMax: 110, // Y축 최대값 설정
+                            suggestedMax: 110, // Y축축 최대값 설정
                             ticks: {
                                 stepSize: 10, // Y축 간격 설정
                                 callback: function(value) {

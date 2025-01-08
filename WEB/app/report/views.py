@@ -86,7 +86,9 @@ def calendar_view(request, user_id):
     )
     report_dates = [date.strftime("%Y-%m-%d") for date in report_dates]  # 문자열 형식으로 변환
 
-    months = range(1, 13)
+    months = list(range(1, 13))
+
+    print(months)
 
     return render(
         request,
@@ -240,11 +242,6 @@ class StreamingDailyReportAPI(APIView):
                 f"정답 여부: {record['correct']}"
                 for record in histories
             ]
-        )
-
-        print(
-            "record details ==============================================================",
-            [record["quiz_code"] for record in histories],
         )
 
         # AI 프롬프트 생성
