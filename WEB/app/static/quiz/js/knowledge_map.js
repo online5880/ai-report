@@ -103,9 +103,9 @@ async function fetchAndRenderKnowledgeGraph() {
       .forceSimulation(graphData.nodes)
       .force(
         "link",
-        d3.forceLink(graphData.links).id((d) => d.id).distance(100)
+        d3.forceLink(graphData.links).id((d) => d.id).distance(50)
       )
-      .force("charge", d3.forceManyBody().strength(-300))
+      .force("charge", d3.forceManyBody().strength(-20))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
     const link = svg
