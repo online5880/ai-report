@@ -422,28 +422,6 @@ def get_graph_data():
         return {"nodes": nodes, "links": links}
 
 
-def _get_node_color(labels, color_mapping):
-    """
-    노드의 레이블을 기준으로 색상을 반환하는 함수
-    - labels: 노드 레이블 리스트
-    - color_mapping: 노드 유형별 색상 매핑 딕셔너리
-    """
-    for label in labels:
-        if label in color_mapping:
-            return color_mapping[label]
-    return "#999"  # 기본 색상
-
-
-def _get_achievement_label(node):
-    """
-    Achievement 노드의 레이블을 반환
-    - Achievement 노드는 `code` 속성을 레이블로 사용
-    """
-    if "code" in node:
-        return node["code"]
-    return "Achievement"
-
-
 def neo4j_view(request):
     """
     Neo4j 데이터를 템플릿으로 렌더링합니다.

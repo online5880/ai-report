@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from .routers import recommend
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="GraphSAGE API")
+# FastAPI 앱 초기화
+app = FastAPI(
+    title="GraphSAGE API",
+    docs_url="/api/graphsage/docs",  # Swagger UI 경로
+    openapi_url="/api/graphsage/openapi.json",  # OpenAPI 경로
+)
 
 # CORS 설정 추가
 app.add_middleware(
@@ -14,9 +19,12 @@ app.add_middleware(
 )
 
 # 라우터 등록
-app.include_router(recommend.router, prefix="/recommend", tags=["Recommend"])
+app.include_router(
+    recommend.router, prefix="/api/graphsage/recommend", tags=["Recommend"]
+)
 
 
-@app.get("/")
+# 기본 라우트
+@app.get("/api/graphsage/")
 def read_root():
     return {"message": "Welcome to GraphSAGE API"}

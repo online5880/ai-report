@@ -248,17 +248,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    loadAccuracyChart();
+    // loadAccuracyChart();
 
-    // 지식 그래프 관련 코드
     async function fetchAndRenderKnowledgeGraph() {
         try {
             // 기존 그래프 제거
             d3.select('#knowledge-graph svg').remove();
 
-            // 날짜 없이 API 호출
+            // API 호출
             const response = await fetch(`/api/knowledge-graph/`);
+            if (!response.ok) {
+                throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+            }
+
             const graphData = await response.json();
+
+            // 데이터 유효성 검사
+            if (!graphData || !Array.isArray(graphData.nodes) || !Array.isArray(graphData.links)) {
+                throw new Error('Invalid graph data: nodes or links are missing.');
+            }
+
+            if (graphData.nodes.length === 0 || graphData.links.length === 0) {
+                document.getElementById('knowledge-graph').innerHTML =
+                    '<p style="color: red;">지식 그래프 데이터가 없습니다.</p>';
+                return;
+            }
 
             const width = document.getElementById('knowledge-graph').clientWidth;
             const height = 750;
@@ -311,12 +325,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .enter()
                 .append('circle')
                 .attr('r', 8)
-                .attr('fill', d => d.color)
-                // 드래그 비활성화
-                // .call(d3.drag()
-                //     .on('start', dragstarted)
-                //     .on('drag', dragged)
-                //     .on('end', dragended));
+                .attr('fill', d => d.color);
 
             // 노드 레이블
             const label = svg.append('g')
@@ -350,23 +359,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 label
                     .attr('x', d => d.x)
                     .attr('y', d => d.y);
-            }
-
-            function dragstarted(event) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                event.subject.fx = event.subject.x;
-                event.subject.fy = event.subject.y;
-            }
-
-            function dragged(event) {
-                event.subject.fx = event.x;
-                event.subject.fy = event.y;
-            }
-
-            function dragended(event) {
-                if (!event.active) simulation.alphaTarget(0);
-                event.subject.fx = null;
-                event.subject.fy = null;
             }
 
         } catch (error) {
