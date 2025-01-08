@@ -6,7 +6,7 @@ from .models import Question
 
 def quiz_view(request, user_id):
     if request.method == 'GET':
-        # 문제를 랜덤으로 가져오기 (예: 10개)
+        # 문제를 가져오기 (예: 10개)
         questions = Question.objects.all()[:10]
         return render(request, 'quiz/quiz.html', {'questions': questions, 'user_id': user_id})
 
@@ -20,17 +20,15 @@ def quiz_view(request, user_id):
                 question_id = key.split("_")[1]
                 question = Question.objects.get(id=question_id)
                 selected_choice = question.choices.get(id=value)
-                is_correct = 'O' if selected_choice.is_correct else 'X'
 
                 # DB에 기록 저장
                 TestHistory.objects.create(
                     user_id=user_id,
-                    m_code='quiz_module',
-                    no=question_id,
+                    m_code="quiz_module",
                     quiz_code=selected_choice.id,
-                    answer=selected_choice.text,
-                    correct=is_correct,
+                    correct='O' if selected_choice.is_correct else 'X',
                     cre_date=now(),
+                    f_mchapter_id=question.f_mchapter_id,  # 문제의 중단원 코드 사용
                 )
 
                 total += 1
