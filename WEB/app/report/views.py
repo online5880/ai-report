@@ -2,7 +2,7 @@ import os
 import uuid
 from django.http import StreamingHttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
-from django.utils.timezone import now, make_aware, utc, timedelta, get_default_timezone
+from django.utils.timezone import now, make_aware, utc
 from django.utils import timezone
 from django.contrib import messages
 
@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from user.models import TestHistory, DailyReport
 from langchain_openai import ChatOpenAI  # LangChain OpenAI 통합
@@ -472,7 +472,7 @@ class KnowledgeGraphAPI(APIView):
     def get(self, request):
         try:
             graph_data = get_graph_data()
-            print("graph_data : ", graph_data)
+
             return JsonResponse(graph_data)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
@@ -656,18 +656,23 @@ class AccuracyAPIView(APIView):
         try:
             # 기준 날짜 설정
             target_date = datetime.strptime(target_date, "%Y-%m-%d")
-            labels = ["월", "화", "수", "목", "금"]
+            labels = [
+                (target_date + timedelta(days=i)).strftime("%a") for i in range(-2, 3)
+            ]
             accuracy_data = []
 
             for i in range(-2, 3):  # 기준 날짜 포함 총 5일
                 day = target_date + timedelta(days=i)
-
-                # 하루의 시작과 끝을 타임존과 함께 설정
-                start_datetime = make_aware(
-                    datetime.combine(day, datetime.min.time()), get_default_timezone()
+                start_datetime = datetime.combine(day, datetime.min.time()).replace(
+                    tzinfo=utc
                 )
-                end_datetime = make_aware(
-                    datetime.combine(day, datetime.max.time()), get_default_timezone()
+                end_datetime = datetime.combine(day, datetime.max.time()).replace(
+                    tzinfo=utc
+                )
+
+                # 디버깅: UTC 날짜 범위 확인
+                print(
+                    f"[DEBUG] Day: {day}, Start (UTC): {start_datetime}, End (UTC): {end_datetime}"
                 )
 
                 # 데이터 필터링
@@ -675,28 +680,38 @@ class AccuracyAPIView(APIView):
                     user_id=user_id, cre_date__range=[start_datetime, end_datetime]
                 )
 
-                # 총 시도 횟수와 정답 개수 계산
+                # 디버깅: 필터링된 데이터 확인
+                print(f"[DEBUG] Filtered Records (UTC): {list(records.values())}")
+
                 total_questions = records.count()
-                correct_answers = records.filter(
-                    correct__iexact="O"
-                ).count()  # 대소문자 구분 없이 필터링
+                correct_answers = records.filter(correct__iexact="O").count()
+
+                # 디버깅: 정답 개수 확인
+                print(
+                    f"[DEBUG] Total Questions: {total_questions}, Correct Answers: {correct_answers}"
+                )
 
                 # 정답률 계산
-                if total_questions > 0:
-                    accuracy = (correct_answers / total_questions) * 100
-                else:
-                    accuracy = 0
+                accuracy = (
+                    (correct_answers / total_questions) * 100
+                    if total_questions > 0
+                    else 0
+                )
+                accuracy_data.append(round(accuracy, 2))
 
-                # 정답률 데이터 추가
-                accuracy_data.append(round(accuracy, 2))  # 소수점 두 자리까지
+                # 디버깅: 정답률
+                print(f"[DEBUG] Accuracy for {day}: {accuracy}")
 
-                print(accuracy_data)
+            # 디버깅: 최종 결과
+            print(f"[DEBUG] Labels: {labels}")
+            print(f"[DEBUG] Accuracy Data: {accuracy_data}")
 
             return Response(
                 {"labels": labels, "data": accuracy_data}, status=status.HTTP_200_OK
             )
 
         except Exception as e:
+            print(f"[ERROR] Exception: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

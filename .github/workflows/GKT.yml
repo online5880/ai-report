@@ -36,3 +36,32 @@ jobs:
     - name: Push Docker Image to ECR
       run: |
         docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+    - name: EC2 접속 후 GKT 배포
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_KEY }}
+        port: 22
+        script: |
+          # 작업 디렉토리로 이동
+          cd /home/ubuntu/gkt
+
+          # ECR 로그인
+          if ! aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}; then
+            echo "ECR 로그인 실패"
+            exit 1
+          fi
+
+          # 최신 이미지 pull (docker-compose.yml 기반)
+          docker-compose pull
+
+          # 기존 컨테이너 중지 및 제거
+          docker-compose down
+
+          # 새로운 컨테이너 실행
+          docker-compose up -d
+
+
+

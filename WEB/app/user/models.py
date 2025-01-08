@@ -33,11 +33,10 @@ class TestHistory(models.Model):
 
     user_id = models.UUIDField(default=uuid.uuid4, db_index=True)  # UUID
     m_code = models.CharField(max_length=50, db_index=True)  # 문자열 (mCode)
-    no = models.IntegerField()  # 정수형 (No)
     quiz_code = models.BigIntegerField(db_index=True)  # 정수형 (QuizCode), 큰 정수 처리
-    answer = models.TextField(null=True, blank=True)  # 긴 문자열 허용 (Answer)
     correct = models.CharField(max_length=1, db_index=True)  # 한 글자 문자열 (Correct)
     cre_date = models.DateTimeField(db_index=True)  # 날짜/시간 (CreDate)
+    f_mchapter_id = models.BigIntegerField(db_index=True)  # 문자열 (F_MChapter)  
 
     def __str__(self):
         return f"{self.user_id} - {self.m_code}"

@@ -1,86 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import torch
-import mlflow.pytorch
-import os
-import pandas as pd
-from dotenv import load_dotenv
-import sys
-import boto3
+import polars as pl
+import time
+from .model_utils import load_model, predict_model
+from .AWS_utils import get_rds_data
+from .data_utils import prepare_data
+from .config import DB_CONFIG
 
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(BASE_DIR, 'model'))
-
-print("Current sys.path:", sys.path)
-
-
-try:
-    import models
-    print("모듈이 성공적으로 로드되었습니다.")
-except ImportError as e:
-    print(f"모듈 로드 실패: {e}")
-
-# import app.models.models
-
-
-# MLflow Tracking URI 설정
-mlflow.set_tracking_uri(os.getenv('MLFLOW_SERVER_URI', "http://bigdata9:bigdata9-@mane.my/mlflow/"))
-
-def get_csv_file(local_path, s3_bucket_name, s3_key):
-    
-    if os.path.exists(local_path):
-        print(f"로컬에서 파일을 읽습니다: {local_path}")
-        return pd.read_csv(local_path)
-
-    print(f"로컬 파일이 없습니다. S3에서 파일을 다운로드합니다: {s3_bucket_name}/{s3_key}")
-    try:
-        # S3 클라이언트 생성
-        s3 = boto3.client('s3')
-        
-        # 파일 다운로드
-        s3.download_file(s3_bucket_name, s3_key, local_path)
-        print(f"파일이 성공적으로 다운로드되었습니다: {local_path}")
-
-        # CSV 파일 읽기
-        return pd.read_csv(local_path)
-
-    except Exception as e:
-        raise RuntimeError(f"S3에서 파일을 다운로드하는 중 에러가 발생했습니다: {e}")
-
-# 예제 사용
-local_csv_path = '/code/app/filtered_combined_user_data.csv'
-s3_bucket = 'big9-project-01'
-s3_file_key = 'data/tbl_app_testhisdtl/filtered_combined_user_data.csv'
-
-try:
-    data = get_csv_file(local_csv_path, s3_bucket, s3_file_key)
-    print("데이터가 성공적으로 로드되었습니다.")
-except RuntimeError as e:
-    print(f"에러: {e}")
-
-# 모델 로드
-def load_model():
-    logged_model = 'runs:/446b1a8e75ff4263a59f168a5605ba90/best_model'
-    model = mlflow.pytorch.load_model(logged_model, map_location=torch.device('cpu'))
-    model.eval()
-    return model
-
+# 모델 및 데이터 로드
+# data = get_rds_data(db_config = DB_CONFIG)
 model = load_model()
 
-# FastAPI 애플리케이션 인스턴스 생성
-app = FastAPI()
+# FastAPI 인스턴스 생성
+app = FastAPI(docs_url="/docs", openapi_url="/api/gkt/openapi.json")
 
-
-# Health Check 엔드포인트 정의
-@app.get("/health")  # HTTP GET 요청을 처리
+@app.get("/health")
 def health_check():
-    """
-    Health Check 엔드포인트.
-    서버가 정상적으로 작동하는지 확인하기 위해 사용.
-    """
-    return {"status": "ok"}  # 서버 상태를 JSON 형식으로 반환
-
+    return {"status": "ok"}
 
 # 입력 데이터 모델 정의
 class InputData(BaseModel):
@@ -88,51 +24,113 @@ class InputData(BaseModel):
     skill_list: list
     correct_list: list
 
-
-# 예측 엔드포인트 정의
 @app.post("/api/gkt")
 async def predict(input_data: InputData):
     try:
-        user_id = input_data.user_id
-        user_data = data[data['UserID'] == user_id]
+        start_time = time.time()
 
-        # Step 0 - 정렬: 가장 오래된 기록부터 정렬
-        user_data.sort_values(by=["UserID", "CreDate"], inplace=True)  # "CreDate" 컬럼을 기준으로 정렬
+        # 유저 데이터 필터링
+        user_data = get_rds_data(db_config = DB_CONFIG, user_id = input_data.user_id)
+        user_data = user_data.sort("cre_date")
 
-        # Step 2 - Enumerate skill id
-        user_data['skill'], _ = pd.factorize(user_data['f_mchapter_id'], sort=True)  # we can also use problem_id to represent exercises
+        # 스킬 매핑
+        skill_map = user_data["f_mchapter_id"].unique().sort().to_list()
+        skill_map_dict = {value: idx for idx, value in enumerate(skill_map)}
 
-        # correct 생성 (O -> 1, X -> 0)
-        user_data['Correct'] = user_data['Correct'].map({'O': 1, 'X': 0})
+        user_data = user_data.with_columns(
+            pl.col("f_mchapter_id")
+            .replace(skill_map_dict)
+            .cast(pl.Int32)
+            .alias("skill")
+        )
+        user_data = user_data.with_columns(
+            pl.col("correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("correct")
+        )
+        user_data = user_data.with_columns(
+            (pl.col("skill") * 2 + pl.col("correct")).alias("skill_with_answer")
+        )
 
-        # Step 3 - Cross skill id with answer to form a synthetic feature
-        # use_binary: (0,1); !use_binary: (1,2,3,4,5,6,7,8,9,10,11,12). Either way, the correct result index is guaranteed to be 1
-        user_data['skill_with_answer'] = user_data['skill'] * 2 + user_data['Correct']
+        # 입력 데이터 변환
+        next_skills = [skill_map_dict.get(skill, -1) for skill in input_data.skill_list]
+        if -1 in next_skills:
+            raise HTTPException(
+                status_code=400,
+                detail="One or more skills in skill_list are not present in the data.",
+            )
 
-        # 유저 풀이 시퀀스 및 다음 문제 정의
-        features = user_data['skill_with_answer'].tolist()
-        questions = user_data['skill'].tolist()
+        features_tensor, questions_tensor = prepare_data(user_data, next_skills, input_data)
 
-        next_skills = input_data.skill_list
-        next_answers = input_data.correct_list
+        # 모델 예측
+        next_preds = predict_model(model, features_tensor, questions_tensor, next_skills)
 
-        for i in range(0, len(next_skills)):
-            features.append(next_skills[i] * 2 + next_answers[i])
-            questions.append(next_skills[i])
+        # 결과 생성
+        result = [
+            {skill: next_preds[idx].item()}
+            for idx, skill in enumerate(input_data.skill_list)
+        ]
 
-        features_tensor = torch.tensor(features, dtype=torch.long).unsqueeze(0)
-        questions_tensor = torch.tensor(questions, dtype=torch.long).unsqueeze(0)
-
-        with torch.no_grad():
-            pred_res, _, _, _ = model(features_tensor, questions_tensor)  # 입력값과 동일한 디바이스에서 수행
-            next_preds = pred_res.squeeze(0)[-len(next_skills):]  # 다음 문제에 해당하는 예측값
-
-        result = []
-        for idx, skill in enumerate(input_data.skill_list):
-            result.append({skill: next_preds[idx].item()})
-
-        # 예측 결과 반환
+        print(f"전체 소요 시간: {time.time() - start_time:.4f} 초")
         return {"predictions": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/gkt/confusion-matrix")
+async def get_confusion_matrix(input_data: InputData):
+    try:
+        threshold = 0.75
+        user_data = get_rds_data(db_config = DB_CONFIG, user_id = input_data.user_id)
+        user_data = user_data.sort("cre_date")
+
+        # 스킬 매핑
+        skill_map = user_data["f_mchapter_id"].unique().sort().to_list()
+        skill_map_dict = {value: idx for idx, value in enumerate(skill_map)}
+
+        user_data = user_data.with_columns(
+            pl.col("f_mchapter_id")
+            .replace(skill_map_dict)
+            .cast(pl.Int32)
+            .alias("skill")
+        )
+        user_data = user_data.with_columns(
+            pl.col("correct").replace({"O": 1, "X": 0}).cast(pl.Int32).alias("correct")
+        )
+        user_data = user_data.with_columns(
+            (pl.col("skill") * 2 + pl.col("correct")).alias("skill_with_answer")
+        )
+
+        next_skills = [skill_map_dict.get(skill, -1) for skill in input_data.skill_list]
+        if -1 in next_skills:
+            raise HTTPException(
+                status_code=400,
+                detail="One or more skills in skill_list are not present in the data.",
+            )
+
+        features_tensor, questions_tensor = prepare_data(user_data, next_skills, input_data)
+
+        next_preds = predict_model(model, features_tensor, questions_tensor, next_skills)
+        confusion_results = []
+
+        for i, pred in enumerate(next_preds.tolist()):
+            pred_result = 1 if pred >= threshold else 0
+            if pred_result == input_data.correct_list[i]:
+                if pred_result == 1:
+                    analysis = "개념 확립 (정답 확신)"
+                else:
+                    analysis = "개념 확립 (오답 확신)"
+            else:
+                if pred_result == 1:
+                    analysis = "실수 (과신)"
+                else:
+                    analysis = "찍음 (운 좋게 맞춤)"
+
+            confusion_results.append({
+                "skill": input_data.skill_list[i],
+                "predicted_probability": pred,
+                "predicted_result": pred_result,
+                "actual_result": input_data.correct_list[i],
+                "analysis": analysis
+            })
+
+        return {"confusion_matrix": confusion_results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
