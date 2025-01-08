@@ -746,11 +746,9 @@ class GraphDataAPIView(APIView):
         # Neo4j 연결 설정
         graph = Neo4jGraph(
             url=neo4j_uri,
-            neo4j_username=neo4j_username,
-            neo4j_password=neo4j_password,
+            username=neo4j_username,
+            password=neo4j_password,
         )
-
-        print("graph neo4j", graph.__dict__)
 
         # 요청 데이터에서 메시지 가져오기
         message = request.data.get("message", "").strip()

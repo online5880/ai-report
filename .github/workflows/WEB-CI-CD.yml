@@ -133,7 +133,7 @@ jobs:
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           if [[ "${{ needs.build-and-push-ecr.result }}" == "failure" ]]; then
-            STATUS="❌ 빌드 및 ECR 푸시 실패"
+            STATUS="❌ 빌드 및 ECR 푸시"
             COLOR="#ff0000"
           elif [[ "${{ needs.deploy-to-ecs.result }}" == "failure" ]]; then
             STATUS="❌ ECS 배포 실패"
@@ -166,10 +166,6 @@ jobs:
                       {
                         \"type\": \"mrkdwn\",
                         \"text\": \"*🛠️ 브랜치:*\n\`${GITHUB_REF_NAME}\`\"
-                      },
-                      {
-                        \"type\": \"mrkdwn\",
-                        \"text\": \"*🔗 커밋:*\n`${{ github.sha }}\`\"
                       }
                     ]
                   }
