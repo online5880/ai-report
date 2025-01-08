@@ -6,8 +6,6 @@ from .config import BASE_DIR
 sys.path.insert(0, os.path.join(BASE_DIR, "model"))
 
 
-
-
 def load_model():
     """
     MLflow에서 모델을 로드하는 함수.
@@ -15,7 +13,7 @@ def load_model():
         torch.nn.Module: 로드된 PyTorch 모델.
     """
     
-    model = torch.load(os.path.join(BASE_DIR, 'model/model.pth'), map_location=torch.device("cpu"))
+    model = torch.load(os.path.join(BASE_DIR, 'model.pth'), map_location=torch.device("cpu"))
     model.eval()
     return model
 

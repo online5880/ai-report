@@ -5,7 +5,11 @@ import time
 from .model_utils import load_model, predict_model
 from .AWS_utils import get_rds_data
 from .data_utils import prepare_data
-from .config import DB_CONFIG
+from .config import DB_CONFIG, BASE_DIR
+import sys
+import os
+
+sys.path.insert(0, os.path.join(BASE_DIR, "model"))
 
 # 모델 및 데이터 로드
 # data = get_rds_data(db_config = DB_CONFIG)
