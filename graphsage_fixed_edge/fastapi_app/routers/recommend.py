@@ -24,7 +24,7 @@
 #     return cosine_similarity(embeddings)
 
 
-# def recommend_concepts(target_concept_id: int, similarities: np.ndarray, id_to_idx: Dict[int, int], 
+# def recommend_concepts(target_concept_id: int, similarities: np.ndarray, id_to_idx: Dict[int, int],
 #                        idx_to_id: Dict[int, int], learning_order: Dict[int, int], top_k: int):
 #     """
 #     유사도 기반 개념 추천
@@ -85,7 +85,7 @@
 #         idx_to_id_path = os.path.join(DATA_DIR, "idx_to_id.json")
 #         learning_order_path = os.path.join(DATA_DIR, "learning_order.json")
 #         lecture_df_path = os.path.join(DATA_DIR, "lecture_df.csv")
-        
+
 #         id_to_idx = {int(k): int(v) for k, v in json.load(open(id_to_idx_path)).items()}
 #         idx_to_id = {int(k): int(v) for k, v in json.load(open(idx_to_id_path)).items()}
 #         learning_order = {int(k): int(v) for k, v in json.load(open(learning_order_path)).items()}
@@ -129,7 +129,6 @@
 
 import json
 import os
-from typing import List, Dict
 from fastapi import APIRouter, HTTPException
 from fastapi_app.schemas import RecommendRequest, RecommendResponse
 from sklearn.metrics.pairwise import cosine_similarity
@@ -140,7 +139,9 @@ router = APIRouter()
 
 # 경로 설정
 CURRENT_FILE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일 위치
-PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_FILE_DIR, "..", ".."))  # 프로젝트 루트 디렉토리
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(CURRENT_FILE_DIR, "..", "..")
+)  # 프로젝트 루트 디렉토리
 MODELS_DIR = os.path.join(PROJECT_ROOT, "models")  # models 디렉토리
 DATA_DIR = os.path.join(PROJECT_ROOT, "fastapi_app", "data")  # 데이터 디렉토리
 EMBEDDING_PATH = os.path.join(MODELS_DIR, "trained_node_embeddings.npy")
@@ -148,6 +149,7 @@ EMBEDDING_PATH = os.path.join(MODELS_DIR, "trained_node_embeddings.npy")
 # 전역 변수
 EMBEDDINGS = None
 SIMILARITIES = None
+
 
 def load_embeddings(file_path: str) -> np.ndarray:
     """임베딩 파일 로드"""
@@ -159,6 +161,7 @@ def load_embeddings(file_path: str) -> np.ndarray:
 def compute_similarities(embeddings: np.ndarray) -> np.ndarray:
     """코사인 유사도 계산"""
     return cosine_similarity(embeddings)
+
 
 def initialize_data():
     """임베딩 및 유사도 데이터 초기화"""
@@ -175,6 +178,7 @@ def initialize_data():
     SIMILARITIES = compute_similarities(EMBEDDINGS)
     print("Embeddings and similarities initialized successfully")
 
+
 # 서버 시작 시 데이터 로드
 try:
     initialize_data()
@@ -182,7 +186,10 @@ except Exception as e:
     print(f"[Error] Failed to initialize data: {e}")
     raise
 
-def recommend_concepts(target_concept_id, similarities, id_to_idx, idx_to_id, learning_order, top_k):
+
+def recommend_concepts(
+    target_concept_id, similarities, id_to_idx, idx_to_id, learning_order, top_k
+):
     """
     타겟 개념에 대해 유사도가 높은 개념 추천
     """
@@ -196,16 +203,22 @@ def recommend_concepts(target_concept_id, similarities, id_to_idx, idx_to_id, le
 
     all_indices = np.argsort(-similarities[target_idx])
     similar_indices = [idx for idx in all_indices if idx != target_idx]
-    filtered_indices = [idx for idx in similar_indices if similarities[target_idx][idx] >= 0.7]
+    filtered_indices = [
+        idx for idx in similar_indices if similarities[target_idx][idx] >= 0.7
+    ]
 
     target_order = learning_order[target_concept_id]
     filtered_indices_by_order = [
-        idx for idx in filtered_indices if learning_order.get(idx_to_id[idx], float("inf")) < target_order
+        idx
+        for idx in filtered_indices
+        if learning_order.get(idx_to_id[idx], float("inf")) < target_order
     ]
 
     if target_concept_id == 14201781:
         fallback_indices_by_order = [
-            idx for idx in similar_indices if learning_order.get(idx_to_id[idx], float("inf")) < target_order
+            idx
+            for idx in similar_indices
+            if learning_order.get(idx_to_id[idx], float("inf")) < target_order
         ]
         if fallback_indices_by_order:
             best_idx = fallback_indices_by_order[0]
@@ -220,7 +233,9 @@ def recommend_concepts(target_concept_id, similarities, id_to_idx, idx_to_id, le
     return top_k_ids, top_k_similarities
 
 
-def process_predictions(predictions, similarities, id_to_idx, idx_to_id, learning_order, top_k):
+def process_predictions(
+    predictions, similarities, id_to_idx, idx_to_id, learning_order, top_k
+):
     """
     이해도가 0.5 이하인 중단원을 타겟으로 하여 유사한 개념을 추천.
     """
@@ -251,11 +266,16 @@ def map_recommendations_to_lecture_data(grouped_recommendations, lecture_df_path
     for group in grouped_recommendations:
         target_id = group[0]
         similar_ids = group[1:]
-        target_data = lecture_df[lecture_df["f_mchapter_id"] == target_id].to_dict(orient="records")
-        similar_data = lecture_df[lecture_df["f_mchapter_id"].isin(similar_ids)].to_dict(orient="records")
+        target_data = lecture_df[lecture_df["f_mchapter_id"] == target_id].to_dict(
+            orient="records"
+        )
+        similar_data = lecture_df[
+            lecture_df["f_mchapter_id"].isin(similar_ids)
+        ].to_dict(orient="records")
         results.append({"target": target_data, "similar": similar_data})
 
     return results
+
 
 @router.post("/", response_model=RecommendResponse)
 def recommend(request: RecommendRequest):
@@ -265,7 +285,9 @@ def recommend(request: RecommendRequest):
     try:
         # 사용자 정의 예외 처리: top_k 값 검증
         if request.top_k > 5:
-            raise HTTPException(status_code=400, detail="The 'top_k' value must not exceed 5.")
+            raise HTTPException(
+                status_code=400, detail="The 'top_k' value must not exceed 5."
+            )
 
         id_to_idx_path = os.path.join(DATA_DIR, "id_to_idx.json")
         idx_to_id_path = os.path.join(DATA_DIR, "idx_to_id.json")
@@ -274,13 +296,22 @@ def recommend(request: RecommendRequest):
 
         id_to_idx = {int(k): int(v) for k, v in json.load(open(id_to_idx_path)).items()}
         idx_to_id = {int(k): int(v) for k, v in json.load(open(idx_to_id_path)).items()}
-        learning_order = {int(k): int(v) for k, v in json.load(open(learning_order_path)).items()}
+        learning_order = {
+            int(k): int(v) for k, v in json.load(open(learning_order_path)).items()
+        }
 
         grouped_recommendations = process_predictions(
-            request.predictions, SIMILARITIES, id_to_idx, idx_to_id, learning_order, request.top_k
+            request.predictions,
+            SIMILARITIES,
+            id_to_idx,
+            idx_to_id,
+            learning_order,
+            request.top_k,
         )
 
-        mapped_results = map_recommendations_to_lecture_data(grouped_recommendations, lecture_df_path)
+        mapped_results = map_recommendations_to_lecture_data(
+            grouped_recommendations, lecture_df_path
+        )
 
         return {"recommendations": mapped_results}
 
@@ -291,4 +322,3 @@ def recommend(request: RecommendRequest):
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
-

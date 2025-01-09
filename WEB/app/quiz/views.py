@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.utils.timezone import now
+from report.models import Node
 from user.models import TestHistory
 from .models import Question
 import requests
@@ -54,13 +55,15 @@ def quiz_view(request, user_id):
             }
 
             gkt_response = requests.post(
-                "http://mane.my/api/gkt",
+                "http://mane.my/api/gkt/confusion-matrix",
                 headers={"Content-Type": "application/json"},
                 json=gkt_data,
             )
 
             if gkt_response.ok:
                 predictions = gkt_response.json()
+
+                print(predictions)
 
                 # predictions를 세션에 저장하여 결과 페이지에서 사용
                 request.session["predictions"] = predictions
@@ -84,13 +87,38 @@ def quiz_result(request, user_id):
     score = request.GET.get("score", 0)
     total = request.GET.get("total", 0)
     predictions = request.session.get("predictions", {})
-    return render(
-        request,
-        "quiz/knowledge_graph.html",
-        {
-            "user_id": user_id,
-            "score": score,
-            "total": total,
-            "predictions": json.dumps(predictions),
-        },
-    )
+
+    # predictions가 None이 아니고 실제 데이터가 있는지 확인
+    if (
+        predictions
+        and isinstance(predictions, dict)
+        and "confusion_matrix" in predictions
+    ):
+        confusion_matrix = predictions["confusion_matrix"]
+
+        # confusion_matrix가 리스트인지 확인
+        if isinstance(confusion_matrix, list):
+            for entry in confusion_matrix:
+                skill_id = entry.get("skill")
+                if skill_id:
+                    try:
+                        node = Node.objects.get(node_id=skill_id)
+                        entry["skill_name"] = node.f_mchapter_nm
+                    except Node.DoesNotExist:
+                        entry["skill_name"] = "Unknown Skill"
+                        print(f"Node not found for skill_id: {skill_id}")  # 디버깅용
+
+    # 디버깅을 위한 출력 추가
+    print("Modified predictions:", predictions)
+
+    context = {
+        "user_id": user_id,
+        "score": score,
+        "total": total,
+        "predictions": json.dumps(
+            predictions, ensure_ascii=False
+        ),  # 한글 지원을 위해 ensure_ascii=False 추가
+        "predictions_raw": predictions,  # JSON 직렬화 전 데이터도 전달
+    }
+
+    return render(request, "quiz/knowledge_graph.html", context)

@@ -41,23 +41,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 모달 관련 코드
     const modal = document.getElementById("reportModal");
-    const span = document.getElementsByClassName("close")[0];
+    const knowledgeMapModal = document.getElementById("knowledgeMapModal");
+    const span = document.getElementsByClassName("close");
 
     let abortController = null; // AbortController 인스턴스 저장
 
-    span.onclick = function () {
-        if (abortController) {
-            abortController.abort(); // 요청 취소
-        }
-        modal.style.display = "none";
-    };
-
-    window.onclick = function (event) {
-        if (event.target == modal) {
+    // 모달 닫기 버튼 이벤트 리스너 추가
+    Array.from(span).forEach(function(element) {
+        element.onclick = function () {
             if (abortController) {
                 abortController.abort(); // 요청 취소
             }
             modal.style.display = "none";
+            knowledgeMapModal.style.display = "none";
+        };
+    });
+
+    window.onclick = function (event) {
+        if (event.target == modal || event.target == knowledgeMapModal) {
+            if (abortController) {
+                abortController.abort(); // 요청 취소
+            }
+            modal.style.display = "none";
+            knowledgeMapModal.style.display = "none";
         }
     };
 
@@ -248,119 +254,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+        // 전체 지식 맵 버튼 클릭 이벤트 리스너 추가
+        const showKnowledgeMapBtn = document.getElementById("showKnowledgeMapBtn");
+        showKnowledgeMapBtn.addEventListener("click", function () {
+            knowledgeMapModal.style.display = "block";
+            fetchAndRenderKnowledgeGraph();
+        });
 
-    // loadAccuracyChart();
-
-    async function fetchAndRenderKnowledgeGraph() {
+        async function fetchAndRenderKnowledgeGraph() {
         try {
             // 기존 그래프 제거
-            d3.select('#knowledge-graph svg').remove();
+            const graphContainer = document.getElementById('knowledge-graph');
+            graphContainer.innerHTML = ''; // 기존 내용을 초기화
 
-            // API 호출
-            const response = await fetch(`/api/knowledge-graph/`);
-            if (!response.ok) {
-                throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
-            }
+            // PyVis 임베딩 (iframe 방식)
+            const iframe = document.createElement('iframe');
+            iframe.src = pyvisHtmlPath; // Django에서 전달된 경로 사용
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.style.border = 'none';
 
-            const graphData = await response.json();
-
-            // 데이터 유효성 검사
-            if (!graphData || !Array.isArray(graphData.nodes) || !Array.isArray(graphData.links)) {
-                throw new Error('Invalid graph data: nodes or links are missing.');
-            }
-
-            if (graphData.nodes.length === 0 || graphData.links.length === 0) {
-                document.getElementById('knowledge-graph').innerHTML =
-                    '<p style="color: red;">지식 그래프 데이터가 없습니다.</p>';
-                return;
-            }
-
-            const width = document.getElementById('knowledge-graph').clientWidth;
-            const height = 750;
-
-            // SVG 요소 생성
-            const svg = d3.select('#knowledge-graph')
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .call(d3.zoom().on("zoom", function (event) {
-                    svg.attr("transform", event.transform);
-                }))
-                .append('g'); // 그룹 요소 추가
-
-            // 시뮬레이션 설정
-            const simulation = d3.forceSimulation(graphData.nodes)
-                .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(50))
-                .force('charge', d3.forceManyBody().strength(-30))
-                .force('center', d3.forceCenter(width / 2, height / 2));
-
-            // 링크 그리기
-            const link = svg.append('g')
-                .selectAll('line')
-                .data(graphData.links)
-                .enter()
-                .append('line')
-                .attr('stroke', d => d.color)
-                .attr('stroke-width', 2)
-                .attr('marker-end', 'url(#arrowhead)');
-
-            // 화살표 마커 정의
-            svg.append('defs').append('marker')
-                .attr('id', 'arrowhead')
-                .attr('viewBox', '-0 -5 10 10')
-                .attr('refX', 15)
-                .attr('refY', 0)
-                .attr('orient', 'auto')
-                .attr('markerWidth', 6)
-                .attr('markerHeight', 6)
-                .attr('xoverflow', 'visible')
-                .append('svg:path')
-                .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-                .attr('fill', '#999')
-                .style('stroke', 'none');
-
-            // 노드 그리기
-            const node = svg.append('g')
-                .selectAll('circle')
-                .data(graphData.nodes)
-                .enter()
-                .append('circle')
-                .attr('r', 8)
-                .attr('fill', d => d.color);
-
-            // 노드 레이블
-            const label = svg.append('g')
-                .selectAll('text')
-                .data(graphData.nodes)
-                .enter()
-                .append('text')
-                .text(d => d.label)
-                .attr('font-size', '12px')
-                .attr('dx', 12)
-                .attr('dy', 4);
-
-            // 시뮬레이션 업데이트
-            simulation.nodes(graphData.nodes)
-                .on('tick', ticked);
-
-            simulation.force('link')
-                .links(graphData.links);
-
-            function ticked() {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-
-                node
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y);
-
-                label
-                    .attr('x', d => d.x)
-                    .attr('y', d => d.y);
-            }
+            // iframe 추가
+            // graphContainer.appendChild(iframe);
 
         } catch (error) {
             console.error('지식 그래프 로딩 실패:', error);

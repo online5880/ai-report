@@ -12,7 +12,7 @@ from rest_framework import status
 
 from datetime import datetime, timedelta
 
-from report.models import LessonData
+from report.models import LessonData, Node
 from user.models import TestHistory, DailyReport
 from langchain_openai import ChatOpenAI  # LangChain OpenAI 통합
 from langchain_core.output_parsers import StrOutputParser
@@ -28,6 +28,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from langchain.chains import GraphCypherQAChain
 from langchain_community.graphs import Neo4jGraph
+from django.http import HttpResponse
 
 load_dotenv()
 
@@ -704,7 +705,7 @@ class AccuracyAPIView(APIView):
 
 # Neo4j 연결 설정
 graph = Neo4jGraph(
-    # url="bolt://localhost:7687",
+    # url="bolt://host.docker.internal:7687",
     url=neo4j_uri,
     username=neo4j_username,
     password=neo4j_password,
@@ -875,4 +876,33 @@ class GraphDataAPIView(APIView):
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+def get_pyvis_html(request, user_id):
+    file_path = os.path.join("static", "reconstructed_graph.html")  # 정적 파일 경로
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HttpResponse(html_content, content_type="text/html")
+    else:
+        return HttpResponse("파일을 찾을 수 없습니다.", status=404)
+
+
+class NodeDetailView(APIView):
+    """
+    특정 node_id로 f_mchapter_nm을 반환하는 API
+    """
+
+    def get(self, request, node_id):
+        try:
+            # node_id로 Node 객체 검색
+            node = Node.objects.get(node_id=node_id)
+            return Response(
+                {"node_id": node.node_id, "f_mchapter_nm": node.f_mchapter_nm},
+                status=status.HTTP_200_OK,
+            )
+        except Node.DoesNotExist:
+            return Response(
+                {"error": "Node not found"}, status=status.HTTP_404_NOT_FOUND
             )

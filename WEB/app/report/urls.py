@@ -48,4 +48,6 @@ urlpatterns = [
     ),
     path("api/accuracy/", views.AccuracyAPIView.as_view(), name="accuracy-api"),
     path("api/graph-data/", views.GraphDataAPIView.as_view(), name="graph-data"),
+    path("api/pyvis-graph/<str:user_id>/", views.get_pyvis_html, name="pyvis_graph"),
+    path("node/<int:node_id>/", views.NodeDetailView.as_view(), name="node_detail"),
 ]

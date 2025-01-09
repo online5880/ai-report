@@ -1,13 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
+
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>학습 결과 지식 그래프</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>학습 결과 지식 노드</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <link rel="stylesheet" href="{% static 'quiz/css/knowledge_map.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'quiz/css/knowledge_map.css' %}"/>
   </head>
+
   <body>
     <div class="header">
       <h1>학습 결과 분석</h1>
@@ -15,17 +18,37 @@
     </div>
 
     <div class="score-display">
-      점수: {{ score }} / {{ total }}
+      점수:
+      {{ score }}
+      /
+      {{ total }}
     </div>
 
     <div class="content-container">
-      <div id="knowledge-graph"><h1 style = "text-align: center;">추천 학습 그래프</h1></div>
-      <div id="card-container"></div>
+      <div id="knowledge-graph">
+        <h1 style="text-align: center;">추천 학습 그래프</h1>
+      </div>
+
+        <div id="card-container">
+          <h2>문제별 예측 결과</h2>
+          <div id="prediction-cards"></div>
+        </div>
+        <div id="card-container">
+          <h2>추천 학습</h2>
+          <div id="recommendation-cards"></div>
+        </div>
+
     </div>
+    {% comment %} <div class="stats-container">
+      <h2>중단원 문제별 정오답</h2>
+      <canvas id="statsChart"></canvas>
+    </div> {% endcomment %}
+
 
     <script>
       const predictions = {{ predictions | safe }};
     </script>
     <script src="{% static 'quiz/js/knowledge_map.js' %}"></script>
   </body>
+
 </html>
