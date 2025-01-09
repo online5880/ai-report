@@ -32,8 +32,6 @@ def quiz_view(request, user_id):
                 skill_list.append(question.f_mchapter_id)
                 correct_list.append(0 if selected_choice.is_correct else 1)
 
-                print(f"question_{question_id}: {selected_choice.is_correct}")
-
                 TestHistory.objects.create(
                     user_id=user_id,
                     m_code="quiz_module",
@@ -47,9 +45,6 @@ def quiz_view(request, user_id):
                 if selected_choice.is_correct:
                     score += 1
 
-                print("correct_list:", correct_list)
-                print("skill_list:", skill_list)
-
         # GKT API 호출
         try:
             gkt_data = {
@@ -57,8 +52,6 @@ def quiz_view(request, user_id):
                 "skill_list": skill_list,
                 "correct_list": correct_list,
             }
-
-            print("gkt_data:", gkt_data)
 
             gkt_response = requests.post(
                 "http://mane.my/api/gkt",
@@ -68,6 +61,7 @@ def quiz_view(request, user_id):
 
             if gkt_response.ok:
                 predictions = gkt_response.json()
+
                 # predictions를 세션에 저장하여 결과 페이지에서 사용
                 request.session["predictions"] = predictions
             else:
@@ -90,9 +84,6 @@ def quiz_result(request, user_id):
     score = request.GET.get("score", 0)
     total = request.GET.get("total", 0)
     predictions = request.session.get("predictions", {})
-    print("=" * 50)
-    print("predictions:", predictions)
-    print("=" * 50)
     return render(
         request,
         "quiz/knowledge_graph.html",

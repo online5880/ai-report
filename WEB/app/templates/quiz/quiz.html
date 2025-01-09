@@ -27,15 +27,20 @@
           </div>
         </div>
       {% endfor %}
-      <button type="submit">제출하기</button>
+      <button type="submit" id="submitButton">제출하기</button>
     </form>
 
     <script>
       const form = document.getElementById('quizForm');
+      const submitButton = document.getElementById('submitButton');
       const userId = "{{ user_id }}";
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // 제출하기 버튼 텍스트 변경 및 스피너 추가
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<div class="spinner"></div> 평가 중...';
 
         const formData = new FormData(form);
         const data = {};
@@ -62,6 +67,10 @@
         } catch (error) {
           console.error('Error:', error);
           alert('서버와 통신 중 오류가 발생했습니다.');
+        } finally {
+          // 제출하기 버튼 텍스트 복원
+          submitButton.disabled = false;
+          submitButton.innerHTML = '제출하기';
         }
       });
     </script>

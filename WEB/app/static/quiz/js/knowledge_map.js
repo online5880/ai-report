@@ -19,7 +19,7 @@ async function fetchAndRenderKnowledgeGraph() {
           },
           body: JSON.stringify({
             predictions: flattenedPredictions,
-            top_k: 3,
+            top_k: 2,
           }),
         }
       );
@@ -58,6 +58,7 @@ async function fetchAndRenderKnowledgeGraph() {
       console.log("Graph Data:", graphData);
 
       renderGraph(graphData);
+      renderCards(recommendData.recommendations);
     } catch (error) {
       console.error("Error in fetchAndRenderKnowledgeGraph:", error);
       document.getElementById("knowledge-graph").innerHTML =
@@ -103,9 +104,9 @@ async function fetchAndRenderKnowledgeGraph() {
       .forceSimulation(graphData.nodes)
       .force(
         "link",
-        d3.forceLink(graphData.links).id((d) => d.id).distance(50)
+        d3.forceLink(graphData.links).id((d) => d.id).distance(100)
       )
-      .force("charge", d3.forceManyBody().strength(-20))
+      .force("charge", d3.forceManyBody().strength(-100))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
     const link = svg
@@ -170,6 +171,50 @@ async function fetchAndRenderKnowledgeGraph() {
     });
 
     simulation.force("link").links(graphData.links);
+  }
+
+  function renderCards(recommendations) {
+    const cardContainer = document.getElementById("card-container");
+    cardContainer.innerHTML = "";
+
+    const uniqueItems = new Map();
+
+    recommendations.forEach((recommendation) => {
+      recommendation.target.forEach((item) => {
+        uniqueItems.set(item.mcode, item);
+      });
+      recommendation.similar.forEach((item) => {
+        uniqueItems.set(item.mcode, item);
+      });
+    });
+
+    uniqueItems.forEach((item) => {
+      const card = createCard(item);
+      cardContainer.appendChild(card);
+    });
+  }
+
+  function createCard(item) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.l_title;
+
+    const mcode = document.createElement("p");
+    mcode.textContent = `MCode: ${item.mcode}`;
+
+    const chapterId = document.createElement("p");
+    chapterId.textContent = `중단원ID: ${item.f_mchapter_id}`;
+
+    const typeNm = document.createElement("p");
+    typeNm.textContent = `타입: ${item.l_type_nm}`;
+
+    const chapterName = document.createElement("p");
+    chapterName.textContent = `중단원이름: ${item.f_mchapter_nm}`;
+
+    card.append(title, mcode, chapterId, typeNm, chapterName);
+    return card;
   }
 
   document.addEventListener("DOMContentLoaded", fetchAndRenderKnowledgeGraph);

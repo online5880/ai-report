@@ -18,7 +18,10 @@
       점수: {{ score }} / {{ total }}
     </div>
 
-    <div id="knowledge-graph"></div>
+    <div class="content-container">
+      <div id="knowledge-graph"><h1 style = "text-align: center;">추천 학습 그래프</h1></div>
+      <div id="card-container"></div>
+    </div>
 
     <script>
       const predictions = {{ predictions | safe }};

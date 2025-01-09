@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // 시뮬레이션 설정
             const simulation = d3.forceSimulation(graphData.nodes)
                 .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(50))
-                .force('charge', d3.forceManyBody().strength(-15))
+                .force('charge', d3.forceManyBody().strength(-30))
                 .force('center', d3.forceCenter(width / 2, height / 2));
 
             // 링크 그리기

@@ -12,6 +12,7 @@ from rest_framework import status
 
 from datetime import datetime, timedelta
 
+from report.models import LessonData
 from user.models import TestHistory, DailyReport
 from langchain_openai import ChatOpenAI  # LangChain OpenAI 통합
 from langchain_core.output_parsers import StrOutputParser
@@ -20,6 +21,7 @@ from langchain_core.runnables import RunnablePassthrough
 from neo4j import GraphDatabase
 import json
 from dotenv import load_dotenv
+import re
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -87,8 +89,6 @@ def calendar_view(request, user_id):
     report_dates = [date.strftime("%Y-%m-%d") for date in report_dates]  # 문자열 형식으로 변환
 
     months = list(range(1, 13))
-
-    print(months)
 
     return render(
         request,
@@ -215,8 +215,30 @@ class StreamingDailyReportAPI(APIView):
         existing_report = DailyReport.objects.filter(user_id=user_id, date=date).first()
         if existing_report:
             # 리포트가 존재하면 기존 리포트를 스트리밍 형식으로 반환
+            report_content = existing_report.report_content
+            # mcode 패턴 정의 및 필터링
+            mcode_pattern = r"T1ME\d{2}U\d{5}"
+            mcodes = re.findall(mcode_pattern, report_content)
+
+            # LessonData 모델에서 해당 mcode들을 사용하여 데이터 추출
+            lesson_data = LessonData.objects.filter(mcode__in=mcodes)
+
+            # mcode를 unique_content_nm으로 변경
+            mcode_to_unique_content_nm = {
+                lesson.mcode: lesson.unique_content_nm for lesson in lesson_data
+            }
+
+            # report_content에서 mcode를 unique_content_nm으로 대체
+            def replace_mcode_with_unique_content_nm(match):
+                mcode = match.group(0)
+                return mcode_to_unique_content_nm.get(mcode, mcode)
+
+            updated_report_content = re.sub(
+                mcode_pattern, replace_mcode_with_unique_content_nm, report_content
+            )
+
             return StreamingHttpResponse(
-                existing_report.report_content,  # `data:` 접두어 없이 바로 출력
+                updated_report_content,  # `data:` 접두어 없이 바로 출력
                 content_type="text/event-stream; charset=utf-8",
             )
 
@@ -225,7 +247,7 @@ class StreamingDailyReportAPI(APIView):
             user_id=user_id, cre_date__range=(start_date, end_date)
         ).values("m_code", "quiz_code", "correct")
 
-        print("SQL Query:", histories.query)  # SQL 쿼리 디버깅
+        # print("SQL Query:", histories.query)  # SQL 쿼리 디버깅
 
         if not histories.exists():
             raise Http404("해당 사용자와 날짜에 대한 기록이 없습니다.")
@@ -247,7 +269,7 @@ class StreamingDailyReportAPI(APIView):
         # AI 프롬프트 생성
         prompt = f"""
         사용자 학습 일일 리포트
-        사용자 ID: {user_id}
+        사용자 ID: {user_id} 님
         날짜: {date}
         요약:
         - 총 시도 횟수: {total_attempts}회
@@ -256,14 +278,25 @@ class StreamingDailyReportAPI(APIView):
         - 정답률: {accuracy:.2f}%
         세부 기록:
         {record_details}
-        위 데이터를 기반으로 다음 내용을 포함한 일일 리포트를 작성하세요:
+
+        ---
+
+        # 마크다운으로 작성할 내용
+
+        ### 요구사항
+        - 초등학교 1~2학년 수준으로 쉽고 친근하게 작성 (150자 이내)
         - 학습 성과 분석
         - 개선을 위한 제안
         - 동기부여 메시지
-        - 학습이 부족한 코드명(mCode)
+        - 부족한 코드명(mCode)
 
-        # 필수
-        초등학생 1,2학년 수준으로 작성하세요.! 150자 이내로 작성하세요.
+        ### 최종 출력 예시 (마크다운 형식)
+
+        ## 오늘의 학습 정리
+        - **학습 성과**
+        - **부족했던 점과 개선 방법**
+        - **힘이 나는 한마디**
+        - **부족한 코드명(mCode) - 여러개 가능, 단 "T1ME"로 시작하는 코드 **
         """
 
         # 스트리밍 리포트 반환
@@ -337,6 +370,7 @@ def clean_env_var(var):
 
 
 neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
+# neo4j_uri = "bolt://host.docker.internal:7687"
 neo4j_username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 neo4j_password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
 # driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(neo4j_username, "bigdata9-"))
@@ -344,9 +378,6 @@ neo4j_password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
 #     "bolt://localhost:7687", auth=(neo4j_username, "bigdata9-")
 # )
 driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
-
-
-print("neo4j : ", neo4j_uri, neo4j_username, neo4j_password)
 
 
 def get_graph_data():
@@ -361,11 +392,12 @@ def get_graph_data():
     1. 노드: id, label, color, properties
     2. 링크: source, target, type, color, title
     """
+
     with driver.session() as session:
         query = "MATCH (n)-[r]->(m) RETURN n, r, m"
         result = session.run(query)
-        print("query : ", query)
-        print("result : ", result)
+        # print("query : ", query)
+        # print("result : ", result)
 
         nodes = []
         links = []
@@ -645,26 +677,13 @@ class AccuracyAPIView(APIView):
                     tzinfo=utc
                 )
 
-                # 디버깅: UTC 날짜 범위 확인
-                print(
-                    f"[DEBUG] Day: {day}, Start (UTC): {start_datetime}, End (UTC): {end_datetime}"
-                )
-
                 # 데이터 필터링
                 records = TestHistory.objects.filter(
                     user_id=user_id, cre_date__range=[start_datetime, end_datetime]
                 )
 
-                # 디버깅: 필터링된 데이터 확인
-                print(f"[DEBUG] Filtered Records (UTC): {list(records.values())}")
-
                 total_questions = records.count()
                 correct_answers = records.filter(correct__iexact="O").count()
-
-                # 디버깅: 정답 개수 확인
-                print(
-                    f"[DEBUG] Total Questions: {total_questions}, Correct Answers: {correct_answers}"
-                )
 
                 # 정답률 계산
                 accuracy = (
@@ -673,13 +692,6 @@ class AccuracyAPIView(APIView):
                     else 0
                 )
                 accuracy_data.append(round(accuracy, 2))
-
-                # 디버깅: 정답률
-                print(f"[DEBUG] Accuracy for {day}: {accuracy}")
-
-            # 디버깅: 최종 결과
-            print(f"[DEBUG] Labels: {labels}")
-            print(f"[DEBUG] Accuracy Data: {accuracy_data}")
 
             return Response(
                 {"labels": labels, "data": accuracy_data}, status=status.HTTP_200_OK
@@ -745,6 +757,7 @@ class GraphDataAPIView(APIView):
         """
         # Neo4j 연결 설정
         graph = Neo4jGraph(
+            # url="bolt://localhost:7687",
             url=neo4j_uri,
             username=neo4j_username,
             password=neo4j_password,
@@ -850,8 +863,8 @@ class GraphDataAPIView(APIView):
             unique_links = list(
                 {(link["source"], link["target"]): link for link in links}.values()
             )
-            print("query : ", query)
-            print("unique_links : ", unique_links)
+            # print("query : ", query)
+            # print("unique_links : ", unique_links)
             return Response(
                 {"query": query, "nodes": nodes, "links": unique_links},
                 status=status.HTTP_200_OK,
