@@ -702,6 +702,15 @@ class AccuracyAPIView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# Neo4j 연결 설정
+graph = Neo4jGraph(
+    # url="bolt://localhost:7687",
+    url=neo4j_uri,
+    username=neo4j_username,
+    password=neo4j_password,
+)
+
+
 class GraphDataAPIView(APIView):
     """
     Neo4j 그래프 데이터를 가져오는 API
@@ -755,13 +764,6 @@ class GraphDataAPIView(APIView):
         """
         POST 요청으로 Cypher 쿼리를 실행하고 그래프 데이터를 반환합니다.
         """
-        # Neo4j 연결 설정
-        graph = Neo4jGraph(
-            # url="bolt://localhost:7687",
-            url=neo4j_uri,
-            username=neo4j_username,
-            password=neo4j_password,
-        )
 
         # 요청 데이터에서 메시지 가져오기
         message = request.data.get("message", "").strip()
