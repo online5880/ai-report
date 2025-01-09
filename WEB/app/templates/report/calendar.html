@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캘린더</title>
+
+    <!-- FullCalendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'report/css/report.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <h1>
+        <a href="{% url 'user_input' %}" class="btn back-btn" style="margin-right: 10px;">←</a>
+        <!-- 전체 지식 맵 버튼 -->
+        <button id="showKnowledgeMapBtn" class="btn btn-KM" style="margin-top: 20px;">전체 지식 맵 보기</button>
+        {{ user_id }}의 캘린더
+        <a href="/{{ user_id }}/quiz/">
+            <button class="btn back-btn" style="margin-left: 10px; font-size: 16px;">형성평가 시작</button>
+        </a>
+    </h1>
+
+    <!-- 월 선택 버튼 -->
+    <div id="month-selector" style="margin-bottom: 20px;">
+        {% for month in months %}
+        <button onclick="goToMonth({{ month|add:'-1' }})" class="month-btn">{{ month }}월</button>
+        {% endfor %}
+    </div>
+
+    <div class="container">
+        <!-- 캘린더 -->
+        <div id="calendar-container">
+            <div id="calendar"></div>
+        </div>
+
+        <!-- 모달 추가 -->
+        <div id="reportModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+
+                <!-- 리포트 안내: 오른쪽 위 -->
+                <div id="llm-output" class="modal-right-top">
+                    리포트를 확인하려면 날짜를 클릭해주세요.
+                </div>
+
+                <!-- 정답률 변화: 오른쪽 아래 -->
+                <div id="chart-container" class="modal-right-bottom">
+                    <canvas id="accuracy-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 지식 맵 모달 -->
+        <div id="knowledgeMapModal" class="modal">
+            <div class="modal-content-graph">
+                <span class="close">&times;</span>
+                <div id="knowledge-graph">
+                </div>
+                <iframe src="{% static 'report/reconstructed_graph.html' %}" width="100%" height="100%" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ko.js"></script>
+    <!-- marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom JS -->
+    <script>
+        const calendarEvents = [
+            {% for date in dates %}
+                {
+                    title: {% if date|date:"Y-m-d" in report_dates %}'리포트 보기'{% else %}'리포트 생성'{% endif %},
+                    start: '{{ date|date:"Y-m-d" }}',
+                    allDay: true,
+                    extendedProps: {
+                        hasReport: {% if date|date:"Y-m-d" in report_dates %}true{% else %}false{% endif %}
+                    }
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        const userId = "{{ user_id }}";
+    </script>
+    <script src="{% static 'report/js/report.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+    <script>
+        function resizeIframe(iframe) {
+            iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+        }
+    </script>
+    <script>
+    const pyvisHtmlPath = "{% static 'report/reconstructed_graph.html' %}";
+</script>
+</body>
+
+</html>

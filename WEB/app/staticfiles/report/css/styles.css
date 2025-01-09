@@ -1,0 +1,214 @@
+/* 기본 스타일 */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 컨테이너 설정 */
+.container {
+    width: 90vw;
+    height: 85vh;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#calendar-container {
+    height: calc(85vh - 100px);
+    width: 85%;
+    margin: 0 auto;
+    padding: 5px;
+}
+
+#calendar {
+    height: 100%;
+    width: 100%;
+}
+
+/* 추가 정보 섹션 */
+#additional-info div {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Modal 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    z-index: 50;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%;
+    height: 85%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1.25rem;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content > div {
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    overflow-y: auto;
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: #1e293b;
+}
+
+/* FullCalendar 날짜 셀 */
+.fc-daygrid-day {
+    min-height: 80px !important;
+    height: calc((85vh - 250px) / 6) !important;
+}
+
+.fc-daygrid-day-frame {
+    padding: 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.fc-daygrid-day-top {
+    flex: 0 0 12px !important;
+    font-size: 0.85em !important;
+}
+
+/* 버튼 스타일 */
+.has-report, .no-report {
+    border: none !important;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 25px !important;
+    margin: 2px 4px !important;
+    font-size: 0.95em !important;
+    font-weight: 500 !important;
+    padding: 0 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.has-report {
+    background-color: #66bb6a !important;
+    color: white !important;
+}
+
+.has-report:hover {
+    background-color: #4caf50 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.no-report {
+    background-color: #42a5f5 !important;
+    color: white !important;
+}
+
+.no-report:hover {
+    background-color: #1e88e5 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 월 선택기 */
+#month-selector {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 15px !important;
+    margin: 10px 0 20px 0 !important;
+    background-color: #f8f9fa !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+
+#month-selector button {
+    min-width: 60px !important;
+    padding: 8px 16px !important;
+    font-size: 0.95em !important;
+    font-weight: 500 !important;
+    color: #fff !important;
+    background-color: #3498db !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+#month-selector button:hover {
+    background-color: #2980b9 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+#month-selector button.active {
+    background-color: #2ecc71 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* 제목 스타일 */
+h1 {
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin: 15px auto;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    width: fit-content;
+    display: block;
+    position: relative;
+}
+
+/* 제목 밑줄 효과 */
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    height: 3px;
+    background-color: #3498db;
+    border-radius: 2px;
+}

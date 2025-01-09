@@ -1,0 +1,67 @@
+name: GKT API CI/CD
+
+on:
+  push:
+    branches:
+      - dev/GKT_API
+
+env:
+  AWS_REGION: ap-northeast-2  # AWS 리전
+  ECR_REGISTRY: 339712929315.dkr.ecr.ap-northeast-2.amazonaws.com  # ECR 레지스트리
+  ECR_REPOSITORY: bigdata/team-01/gkt-api  # ECR 저장소 이름
+
+jobs:
+  docker_build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: AWS Credential 인증
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build Docker Image
+      run: |
+        docker build -t ${{ env.ECR_REPOSITORY }} ML/GKT_API
+        docker tag ${{ env.ECR_REPOSITORY }}:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+    - name: Push Docker Image to ECR
+      run: |
+        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+
+    - name: EC2 접속 후 GKT 배포
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_KEY }}
+        port: 22
+        script: |
+          # 작업 디렉토리로 이동
+          cd /home/ubuntu/gkt
+
+          # ECR 로그인
+          if ! aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}; then
+            echo "ECR 로그인 실패"
+            exit 1
+          fi
+
+          # 최신 이미지 pull (docker-compose.yml 기반)
+          docker-compose pull
+
+          # 기존 컨테이너 중지 및 제거
+          docker-compose down
+
+          # 새로운 컨테이너 실행
+          docker-compose up -d
+
+
+

@@ -1,0 +1,9 @@
+fastapi
+pydantic
+uvicorn
+mlflow==2.17.2
+gunicorn
+python-dotenv
+boto3
+polars
+psycopg2-binary
