@@ -1,75 +1,95 @@
 async function fetchAndRenderKnowledgeGraph() {
-    try {
-      console.log("Predictions:", predictions);
+  try {
+    console.log("Predictions:", predictions);
 
-      const flattenedPredictions = predictions.confusion_matrix.map((entry) => {
-        return { [entry.skill]: entry.predicted_probability };
-      });
+    // Flatten predictions for API request
+    const flattenedPredictions = predictions.confusion_matrix.map((entry) => ({
+      [entry.skill]: entry.predicted_probability,
+    }));
 
-      const flattenedPredictions_card = predictions.confusion_matrix.map((entry) => {
-        return { skill: entry.skill, predicted_probability: entry.predicted_probability, predicted_result: entry.predicted_result, actual_result: entry.actual_result,skill_name: entry.skill_name };
-      });
+    const flattenedPredictions_card = predictions.confusion_matrix.map((entry) => ({
+      skill: entry.skill,
+      predicted_probability: entry.predicted_probability,
+      predicted_result: entry.predicted_result,
+      actual_result: entry.actual_result,
+      skill_name: entry.skill_name,
+      analysis: entry.analysis
+    }));
 
-      console.log("Flattened Predictions:", flattenedPredictions);
+    console.log("Flattened Predictions:", flattenedPredictions);
 
-      const recommendResponse = await fetch(
-        "http://mane.my/api/graphsage/recommend",
-        {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            predictions: flattenedPredictions,
-            top_k: 1,
-          }),
-        }
-      );
+    // Fetch recommendations
+    const recommendResponse = await fetch("http://mane.my/api/graphsage/recommend", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        predictions: flattenedPredictions,
+        top_k: 1,
+      }),
+    });
 
-      if (!recommendResponse.ok) {
-        throw new Error(`Recommend API error: ${recommendResponse.status}`);
-      }
-
-      const recommendData = await recommendResponse.json();
-      console.log("Recommend API Response:", recommendData);
-
-      const f_mchapter_ids = [
-        ...new Set(
-          recommendData.recommendations.flatMap((r) => [
-            ...r.target.map((t) => t.f_mchapter_id),
-          ])
-        ),
-      ];
-      console.log("Unique f_mchapter_ids:", f_mchapter_ids);
-
-      const graphResponse = await fetch("http://mane.my/api/graph-data/", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: f_mchapter_ids.join(", ") }),
-      });
-
-      if (!graphResponse.ok) {
-        throw new Error(`Graph-data API error: ${graphResponse.status}`);
-      }
-
-      const graphData = await graphResponse.json();
-      console.log("Graph Data:", graphData);
-
-      renderGraph(graphData);
-      renderCards(recommendData.recommendations);
-      renderPredictionCards(flattenedPredictions_card); // 예측 데이터를 카드로 렌더링
-    } catch (error) {
-      console.error("Error in fetchAndRenderKnowledgeGraph:", error);
-      document.getElementById("knowledge-graph").innerHTML =
-        '<p style="color: red;">지식 그래프를 불러오는데 실패했습니다: ' +
-        error.message +
-        "</p>";
+    if (!recommendResponse.ok) {
+      throw new Error(`Recommend API error: ${recommendResponse.status}`);
     }
+
+    const recommendData = await recommendResponse.json();
+    console.log("Recommend API Response:", recommendData);
+
+    // Remove `similar` from recommendations
+    if (recommendData.recommendations && Array.isArray(recommendData.recommendations)) {
+      recommendData.recommendations.forEach((item) => {
+        delete item.similar; // `similar` 제거
+      });
+      console.log("Recommend API Response (after removing similar):", recommendData);
+    } else {
+      console.error("Error: `recommendations` is not a valid array. Received:", recommendData);
+      return;
+    }
+
+    // Extract unique f_mchapter_ids
+    const f_mchapter_ids = Array.from(
+      new Set(
+        recommendData.recommendations.flatMap((r) =>
+          r.target.map((t) => t.f_mchapter_id)
+        )
+      )
+    );
+    console.log("Unique f_mchapter_ids:", f_mchapter_ids);
+
+    // Fetch graph data
+    const graphResponse = await fetch("http://mane.my/api/graph-data/", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: f_mchapter_ids.join(", ") }),
+    });
+
+    if (!graphResponse.ok) {
+      throw new Error(`Graph-data API error: ${graphResponse.status}`);
+    }
+
+    const graphData = await graphResponse.json();
+    console.log("Graph Data:", graphData);
+
+    // Render data
+    renderGraph(graphData);
+    renderCards(recommendData.recommendations);
+    renderPredictionCards(flattenedPredictions_card); // Render prediction cards
+  } catch (error) {
+    console.error("Error in fetchAndRenderKnowledgeGraph:", error);
+    document.getElementById("knowledge-graph").innerHTML = `
+      <p style="color: red;">
+        지식 그래프를 불러오는데 실패했습니다: ${error.message}
+      </p>`;
   }
+}
+
+
 
   function renderGraph(graphData) {
     d3.select("#knowledge-graph svg").remove();
@@ -285,28 +305,57 @@ async function fetchAndRenderKnowledgeGraph() {
 
   function renderPredictionCards(predictions) {
     const cardContainer = document.getElementById("prediction-cards");
-    cardContainer.innerHTML = "";
+    cardContainer.innerHTML = ""; // 기존 내용을 초기화
 
-    const stats = calculateChapterStats(predictions);
-    // renderStatsChart(stats);
-
+    // 데이터 순회
     predictions.forEach((prediction, index) => {
         const card = document.createElement("div");
-        card.className = `card prediction-card ${prediction.actual_result === prediction.predicted_result ? 'correct' : 'incorrect'}`;
+        card.className = `card prediction-card ${
+            prediction.actual_result === prediction.predicted_result ? "correct" : "incorrect"
+        }`;
 
-        // <p>중단원 코드: ${prediction.skill}</p>
-        // <p>예측 확률: ${(prediction.predicted_probability * 100).toFixed(1)}%</p>
+        // 값 가져오기
+        const predictedResult = prediction.predicted_result; // 모델의 예측 결과
+        const actualResult = prediction.actual_result;       // 실제 결과
+        const skillName = prediction.skill_name;             // 중단원 이름
+        const analysis = prediction.analysis;                // 분석 설명
+
+        console.log(`문제 ${index + 1}: Predicted - ${predictedResult}, Actual - ${actualResult}`);
+
+        // 피드백 메시지 생성
+        let feedbackMessage = "";
+        if (predictedResult === actualResult) {
+          feedbackMessage = "확실히 아는 문제입니다!";
+            // if (predictedResult === 0) {
+            //     feedbackMessage = "확실히 아는 문제입니다!";
+            // } else if (predictedResult === 1) {
+            //     feedbackMessage = "학습이 많이 필요한 문제입니다!";
+            // }
+        } else {
+          if (predictedResult === 0 && actualResult === 1) {
+              feedbackMessage = "혹시 실수를 하진 않았나 확인해보세요!";
+            } else if (predictedResult === 1 && actualResult === 0) {
+              feedbackMessage = "알아가는 문제입니다. 감이 잡히셨군요!";
+            }
+        }
+
+        // <p>몰라 : ${analysis}</p>
+        // <p>예측 결과: ${predictedResult === 1 ? "오답" : "정답"}</p>
+        // <p>실제 결과: ${actualResult === 1 ? "오답" : "정답"}</p>
+        // 카드 내용 생성
         const content = `
             <p><strong>문제 ${index + 1}</strong></p>
-            <p>중단원 이름 : ${prediction.skill_name}</p>
-            <p>예측 결과: ${prediction.predicted_result ? '오답' : '정답'}</p>
-            <p>실제 결과: ${prediction.actual_result ? '오답' : '정답'}</p>
+            <p>중단원 이름 : ${skillName}</p>
+            <p>피드백: ${feedbackMessage}</p>
         `;
 
+        // 카드에 콘텐츠 추가
         card.innerHTML = content;
         cardContainer.appendChild(card);
     });
-  }
+}
+
+
 
   function createCard(item) {
     const card = document.createElement("div");

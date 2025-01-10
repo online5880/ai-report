@@ -248,10 +248,20 @@ class StreamingDailyReportAPI(APIView):
             user_id=user_id, cre_date__range=(start_date, end_date)
         ).values("m_code", "quiz_code", "correct")
 
-        # print("SQL Query:", histories.query)  # SQL 쿼리 디버깅
-
         if not histories.exists():
             raise Http404("해당 사용자와 날짜에 대한 기록이 없습니다.")
+
+        # LessonData에서 mcode와 관련 데이터 매핑 생성
+        lesson_data = {
+            lesson["mcode"]: {
+                "l_title": lesson["l_title"],
+                "content_grade": lesson["content_grade"],
+                "term": lesson["term"],
+            }
+            for lesson in LessonData.objects.filter(
+                mcode__in=[history["m_code"] for history in histories]
+            ).values("mcode", "l_title", "content_grade", "term")
+        }
 
         # 학습 통계 계산
         total_attempts = histories.count()
@@ -259,10 +269,13 @@ class StreamingDailyReportAPI(APIView):
         incorrect_answers = total_attempts - correct_answers
         accuracy = (correct_answers / total_attempts) * 100 if total_attempts > 0 else 0
 
+        # record_details 작성
         record_details = "\n".join(
             [
-                f"모듈: {record['m_code']}, 퀴즈: {record['quiz_code']}, "
-                f"정답 여부: {record['correct']}"
+                f"모듈: {lesson_data.get(record['m_code'], {}).get('l_title', '알 수 없음')}, "
+                f"학년: {lesson_data.get(record['m_code'], {}).get('content_grade', '알 수 없음')}학년, "
+                f"학기: {lesson_data.get(record['m_code'], {}).get('term', '알 수 없음')}학기, "
+                f"퀴즈: {record['quiz_code']}, 정답 여부: {record['correct']}"
                 for record in histories
             ]
         )
@@ -289,15 +302,27 @@ class StreamingDailyReportAPI(APIView):
         - 학습 성과 분석
         - 개선을 위한 제안
         - 동기부여 메시지
-        - 부족한 코드명(mCode)
+        - 부족했던 단원(l_title)과 학년 및 학기
+        - 모듈이라는 단어는 단원으로 변경
 
-        ### 최종 출력 예시 (마크다운 형식)
+        ### 출력 예시
+        # {user_id} 친구의 오늘의 학습 리포트 🌟
 
-        ## 오늘의 학습 정리
-        - **학습 성과**
-        - **부족했던 점과 개선 방법**
-        - **힘이 나는 한마디**
-        - **부족한 코드명(mCode) - 여러개 가능, 단 "T1ME"로 시작하는 코드 **
+        ## 오늘의 성과
+        * 문제 {total_attempts}개 중에서 {correct_answers}개를 맞혔어요
+        * 특히 [과목명] 부분이 조금 어려웠나봐요
+
+        ## 앞으로 이렇게 해보면 좋아요
+        * [과목명] 문제는 그림을 그려가며 풀어보면 더 쉬워요
+        * 어려운 문제는 선생님께 질문해보는 것도 좋아요
+
+        ## 힘이 나는 한마디
+        * 꾸준히 노력하는 {user_id} 친구가 정말 자랑스러워요!
+        * 포기하지 않고 도전하는 모습이 멋져요 ⭐
+
+        ## 더 공부하면 좋을 단원
+        * [과목명1]
+        * [과목명2]
         """
 
         # 스트리밍 리포트 반환
@@ -370,8 +395,8 @@ def clean_env_var(var):
     return var
 
 
-neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
-# neo4j_uri = "bolt://host.docker.internal:7687"
+# neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
+neo4j_uri = "bolt://host.docker.internal:7687"
 neo4j_username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 neo4j_password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
 # driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(neo4j_username, "bigdata9-"))
@@ -705,8 +730,8 @@ class AccuracyAPIView(APIView):
 
 # Neo4j 연결 설정
 graph = Neo4jGraph(
-    # url="bolt://host.docker.internal:7687",
-    url=neo4j_uri,
+    url="bolt://host.docker.internal:7687",
+    # url=neo4j_uri,
     username=neo4j_username,
     password=neo4j_password,
 )
@@ -718,8 +743,8 @@ class GraphDataAPIView(APIView):
     """
 
     @swagger_auto_schema(
-        operation_summary="Neo4j 그래프 데이터 조회",
-        operation_description="Cypher 쿼리를 실행하여 그래프 데이터를 반환합니다.",
+        operation_summary="중단원 코드로 지식 그래프(NEO4J) 데이터 조회",
+        operation_description="POST 요청으로 중단원 코드를 넣으면 Cypher 쿼리를 실행하고 그래프 데이터를 반환합니다.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -763,7 +788,7 @@ class GraphDataAPIView(APIView):
     )
     def post(self, request):
         """
-        POST 요청으로 Cypher 쿼리를 실행하고 그래프 데이터를 반환합니다.
+        POST 요청으로 중단원 코드를 넣으면 Cypher 쿼리를 실행하고 그래프 데이터를 반환합니다.
         """
 
         # 요청 데이터에서 메시지 가져오기

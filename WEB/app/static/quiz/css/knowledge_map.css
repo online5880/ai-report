@@ -27,7 +27,7 @@ body {
 
 #knowledge-graph {
     width: 70%;
-    height: 500px;
+    height: 75vh;
     border: 1px solid #ccc;
     border-radius: 8px;
     position: relative;
@@ -35,7 +35,7 @@ body {
 
 #card-container {
     width: 30%;
-    height: 500px;
+    height: 75vh;
     overflow-y: auto;
     border: 1px solid #ccc;
     border-radius: 8px;
