@@ -395,8 +395,8 @@ def clean_env_var(var):
     return var
 
 
-# neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
-neo4j_uri = "bolt://host.docker.internal:7687"
+neo4j_uri = clean_env_var(os.getenv("NEO4J_BOLT_URI"))
+# neo4j_uri = "bolt://host.docker.internal:7687"
 neo4j_username = clean_env_var(os.getenv("NEO4J_USERNAME"))
 neo4j_password = clean_env_var(os.getenv("NEO4J_PASSWORD"))
 # driver = GraphDatabase.driver("bolt://neo4j:7687", auth=(neo4j_username, "bigdata9-"))
@@ -730,8 +730,8 @@ class AccuracyAPIView(APIView):
 
 # Neo4j 연결 설정
 graph = Neo4jGraph(
-    url="bolt://host.docker.internal:7687",
-    # url=neo4j_uri,
+    # url="bolt://host.docker.internal:7687",
+    url=neo4j_uri,
     username=neo4j_username,
     password=neo4j_password,
 )
