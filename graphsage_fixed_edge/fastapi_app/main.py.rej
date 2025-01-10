@@ -1,0 +1,10 @@
+diff a/graphsage_fixed_edge/fastapi_app/main.py b/graphsage_fixed_edge/fastapi_app/main.py	(rejected hunks)
+@@ -28,8 +28,3 @@
+ @app.get("/api/graphsage/")
+ def read_root():
+     return {"message": "Welcome to GraphSAGE API"}
+-
+-
+-@app.get("/")
+-def root():
+-    return {"message": "Welcome to the root of the API"}

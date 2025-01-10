@@ -157,7 +157,6 @@ def load_embeddings(file_path: str) -> np.ndarray:
         raise FileNotFoundError(f"Embedding file not found at {file_path}")
     return np.load(file_path)
 
-
 def compute_similarities(embeddings: np.ndarray) -> np.ndarray:
     """코사인 유사도 계산"""
     return cosine_similarity(embeddings)
@@ -166,7 +165,6 @@ def compute_similarities(embeddings: np.ndarray) -> np.ndarray:
 def initialize_data():
     """임베딩 및 유사도 데이터 초기화"""
     global EMBEDDINGS, SIMILARITIES
-
     print(f"Initializing data with EMBEDDING_PATH: {EMBEDDING_PATH}")
     if not os.path.exists(EMBEDDING_PATH):
         raise FileNotFoundError(f"Embedding file not found at {EMBEDDING_PATH}")
@@ -197,6 +195,7 @@ def recommend_concepts(
         return [], []
 
     target_idx = id_to_idx[target_concept_id]
+    # 개념에 대한 시작 노드는 이전에 배운 후행 개념이 없으므로 예외 처리
     exclude_self_ids = {14201779, 14201784, 14201792, 14201818, 14201871, 14201877}
     if target_concept_id in exclude_self_ids:
         return [target_concept_id], [1.0]
@@ -316,9 +315,10 @@ def recommend(request: RecommendRequest):
         return {"recommendations": mapped_results}
 
     except HTTPException as he:
-        # 사용자 정의 예외를 우선적으로 처리
         raise he
+    except FileNotFoundError as fe:
+        raise HTTPException(status_code=404, detail=f"File not found: {str(fe)}")
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(ve)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
