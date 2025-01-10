@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # 코사인 유사도 계산
     similarities = compute_similarities(embeddings)
 
-    # predictions 데이터 처리
+    # predictions 데이터 처리(GKT 출력 형식, 0.5 미만이면 타겟 노드 ID로 graphsage의 입력으로 들어감)
     predictions= {
         "predictions": [
             {

@@ -107,9 +107,9 @@ def main():
     train_model(model, g, features, epochs=100, lr=0.001)
 
     # 3. 학습된 모델 저장 및 노드 임베딩 계산
-    torch.save(model.state_dict(), "../models/trained_model_test.pth")
+    torch.save(model.state_dict(), "../models/trained_model.pth")
     embeddings = model(g, features).detach().numpy()
-    np.save("../models/trained_node_embeddings_test.npy", embeddings)
+    np.save("../models/trained_node_embeddings.npy", embeddings)
 
 if __name__ == "__main__":
     main()

@@ -76,7 +76,7 @@ def evaluate_precision(target_concept_id, recommended_concepts, label_dict):
 
 if __name__ == "__main__":
     # 학습된 임베딩 파일 경로
-    embedding_file = "../models/trained_node_embeddings_test.npy"
+    embedding_file = "../models/trained_node_embeddings.npy"
     id_to_idx_file = "id_to_idx.json"
     idx_to_id_file = "idx_to_id.json"
     label_file = "node_labels.csv"  # 개념 ID와 라벨이 포함된 파일
