@@ -32,18 +32,6 @@ def recommend_concepts(target_concept_id, similarities, id_to_idx, idx_to_id, le
         idx for idx in filtered_indices if learning_order.get(idx_to_id[idx], float('inf')) < target_order
     ]
 
-    # 타겟 ID가 14201781일 경우
-    if target_concept_id == 14201781:
-        # 유사도 조건(0.7)을 만족하지 못하더라도 학습 순서를 만족하는 개념 중 가장 유사도가 높은 한 개를 추천
-        fallback_indices_by_order = [
-            idx for idx in similar_indices if learning_order.get(idx_to_id[idx], float('inf')) < target_order
-        ]
-        if fallback_indices_by_order:
-            best_idx = fallback_indices_by_order[0]  
-            return [idx_to_id[best_idx]], [similarities[target_idx][best_idx]]
-
-        return [], []  # 학습 순서를 만족하는 개념이 없는 경우
-
     # 상위 K개 제한 (일반적인 경우)
     top_k_indices = filtered_indices_by_order[:top_k]
     top_k_ids = [idx_to_id[idx] for idx in top_k_indices]
@@ -110,8 +98,8 @@ def map_recommendations_to_lecture_data(grouped_recommendations, lecture_df_path
 if __name__ == "__main__":
     # 학습된 임베딩 파일 경로
     embedding_file = "../models/trained_node_embeddings.npy"
-    id_to_idx_file = "../fastapi_app/data/id_to_idx.json"
-    idx_to_id_file = "../fastapi_app/data/idx_to_id.json"
+    id_to_idx_file = "id_to_idx.json"
+    idx_to_id_file = "idx_to_id.json"
     learning_order_file = "../fastapi_app/data/learning_order.json"
     lecture_df_path = "../fastapi_app/data/lecture_df.csv"
     
@@ -166,33 +154,8 @@ if __name__ == "__main__":
         ]
     }
 
-    # # API 요청 데이터 정의
-    # api_url = "http://0.0.0.0:8100/api/gkt"  # GKT 모델 API 엔드포인트
-    # user_history = {
-    #     "user_id": 12345,
-    #     "question_history": [
-    #         {"question_id": "14201897", "answer_correct": True},
-    #         {"question_id": "14201869", "answer_correct": False},
-    #         {"question_id": "14201868", "answer_correct": True}
-    #     ]
-    # }
-
-    # # API 요청
-    # try:
-    #     response = requests.post(api_url, json=user_history)
-    #     response.raise_for_status()  # HTTP 오류 발생 시 예외 처리
-
-    #     # API 응답 데이터
-    #     predictions = response.json()  # JSON 형식으로 파싱
-    #     print("API 응답 데이터:", json.dumps(predictions, indent=4))
-
-    # except requests.exceptions.RequestException as e:
-    #     print(f"API 요청 실패: {e}")
-    #     exit(1)
-
-
     # 상위 추천 개수 설정
-    top_k = 2
+    top_k = 5
 
     # 이해도가 낮은 중단원들에 대한 추천 실행
     grouped_recommendations = process_predictions(
@@ -211,4 +174,5 @@ if __name__ == "__main__":
         for data in result["similar"]:
             print(data)
         print("-" * 76)
+
 

@@ -28,3 +28,8 @@ app.include_router(
 @app.get("/api/graphsage/")
 def read_root():
     return {"message": "Welcome to GraphSAGE API"}
+
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to the root of the API"}

@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 def load_graph(json_path="graph_schema.json"):
-    """그래프 정보(노드-특성 포함함, 엣지)가 담긴 JSON 파일로부터 DGL 그래프를 로드"""
+    """그래프 정보(노드-특성 포함, 엣지)가 담긴 JSON 파일로부터 DGL 그래프를 로드"""
     with open(json_path, "r") as file:
         data = json.load(file)
 
@@ -15,9 +15,9 @@ def load_graph(json_path="graph_schema.json"):
     id_to_idx = {node["id"]: idx for idx, node in enumerate(nodes)}
 
     # 매핑 정보 저장
-    with open("data/id_to_idx.json", "w") as f:
+    with open("id_to_idx.json", "w") as f:
         json.dump(id_to_idx, f)
-    with open("data/idx_to_id.json", "w") as f:
+    with open("idx_to_id.json", "w") as f:
         json.dump({v: k for k, v in id_to_idx.items()}, f)
 
     # 노드 임베딩 배열 생성
