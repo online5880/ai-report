@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import polars as pl
 import time
 from .model_utils import load_model, predict_model
-from .AWS_utils import get_rds_data
+from .AWS_utils import get_rds_data, save_predictions_to_db, save_confusion_results_to_db
 from .data_utils import prepare_data
 from .config import DB_CONFIG, BASE_DIR
 import sys
@@ -73,6 +73,8 @@ async def predict(input_data: InputData):
             for idx, skill in enumerate(input_data.skill_list)
         ]
 
+        save_predictions_to_db(DB_CONFIG, input_data.user_id, result)
+
         print(f"전체 소요 시간: {time.time() - start_time:.4f} 초")
         return {"predictions": result}
     except Exception as e:
@@ -118,14 +120,14 @@ async def get_confusion_matrix(input_data: InputData):
             pred_result = 1 if pred >= threshold else 0
             if pred_result == input_data.correct_list[i]:
                 if pred_result == 1:
-                    analysis = "개념 확립 (정답 확신)"
+                    analysis = "확실히 아는 문제입니다!"
                 else:
-                    analysis = "개념 확립 (오답 확신)"
+                    analysis = "학습이 많이 필요한 문제입니다!"
             else:
                 if pred_result == 1:
-                    analysis = "실수 (과신)"
+                    analysis = "혹시 실수를 하진 않았나 확인해보세요!"
                 else:
-                    analysis = "찍음 (운 좋게 맞춤)"
+                    analysis = "알아가는 문제입니다. 감이 잡히셨군요!"
 
             confusion_results.append({
                 "skill": input_data.skill_list[i],
@@ -134,6 +136,8 @@ async def get_confusion_matrix(input_data: InputData):
                 "actual_result": input_data.correct_list[i],
                 "analysis": analysis
             })
+
+        save_confusion_results_to_db(DB_CONFIG, input_data.user_id, confusion_results)
 
         return {"confusion_matrix": confusion_results}
     except Exception as e:
