@@ -1,0 +1,1637 @@
+{
+    "nodes": [
+        {
+            "id": 14201779,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "1, 2, 3, 4, 5 알아보기",
+            "f_lchapter_id": 17122834,
+            "f_lchapter_nm": "1. 9까지의 수",
+            "f_schapter_id": 12234963,
+            "f_schapter_nm": "그림의 개수 세어 보기",
+            "f_tchapter_id": 12236834,
+            "f_tchapter_nm": "개수가 같은 것끼리 잇기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201780,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "6, 7, 8, 9 알아보기",
+            "f_lchapter_id": 17122834,
+            "f_lchapter_nm": "1. 9까지의 수",
+            "f_schapter_id": 12234966,
+            "f_schapter_nm": "그림을 세어 6~9 알아보기",
+            "f_tchapter_id": 12236842,
+            "f_tchapter_nm": "6, 7, 8, 9를 쓰고 읽기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201781,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "9까지 수의 순서",
+            "f_lchapter_id": 17122834,
+            "f_lchapter_nm": "1. 9까지의 수",
+            "f_schapter_id": 12234968,
+            "f_schapter_nm": "1~9까지 수의 순서 이해하기",
+            "f_tchapter_id": 12236849,
+            "f_tchapter_nm": "수의 순서 알아보기(9까지의 수)",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201782,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "1만큼 더 큰 수와 1만큼 더 작은 수, 0 알아보기",
+            "f_lchapter_id": 17122834,
+            "f_lchapter_nm": "1. 9까지의 수",
+            "f_schapter_id": 12234970,
+            "f_schapter_nm": "1만큼 더 큰 수, 1만큼 더 작은 수 알아보기(그림)",
+            "f_tchapter_id": 12236856,
+            "f_tchapter_nm": "그림보다 1만큼 더 큰 수, 1만큼 더 작은 수 찾기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201783,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "두 수의 크기 비교",
+            "f_lchapter_id": 17122834,
+            "f_lchapter_nm": "1. 9까지의 수",
+            "f_schapter_id": 12234973,
+            "f_schapter_nm": "9까지 수의 크기 비교하기",
+            "f_tchapter_id": 12236864,
+            "f_tchapter_nm": "그림을 보고 많고 적음 비교하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201784,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-01",
+            "f_mchapter_nm": "여러 가지 모양 찾아보기",
+            "f_lchapter_id": 17122835,
+            "f_lchapter_nm": "2. 여러 가지 모양",
+            "f_schapter_id": 12234975,
+            "f_schapter_nm": "여러 가지 모양 찾아보기",
+            "f_tchapter_id": 12236875,
+            "f_tchapter_nm": "주어진 모양과 같은 물건 찾기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201785,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-03",
+            "f_mchapter_nm": "여러 가지 모양 알아보기",
+            "f_lchapter_id": 17122835,
+            "f_lchapter_nm": "2. 여러 가지 모양",
+            "f_schapter_id": 12234976,
+            "f_schapter_nm": "모양의 특징 알아보기",
+            "f_tchapter_id": 12236883,
+            "f_tchapter_nm": "각 모양의 특징 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201786,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-04",
+            "f_mchapter_nm": "2, 3, 4, 5를 모으고 가르기",
+            "f_lchapter_id": 17122836,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12234978,
+            "f_schapter_nm": "2~3을 모으고 가르기",
+            "f_tchapter_id": 12236889,
+            "f_tchapter_nm": "2를 모으기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201787,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-04",
+            "f_mchapter_nm": "6, 7, 8, 9를 모으고 가르기",
+            "f_lchapter_id": 17122836,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12234982,
+            "f_schapter_nm": "6~7을 모으고 가르기",
+            "f_tchapter_id": 12236901,
+            "f_tchapter_nm": "6을 모으기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201789,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "덧셈",
+            "f_lchapter_id": 17122836,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12234990,
+            "f_schapter_nm": "덧셈식 알아보기",
+            "f_tchapter_id": 12236920,
+            "f_tchapter_nm": "그림을 보고 덧셈식 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201790,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "뺄셈",
+            "f_lchapter_id": 17122836,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12234992,
+            "f_schapter_nm": "뺄셈식 알아보기",
+            "f_tchapter_id": 12236928,
+            "f_tchapter_nm": "그림을 보고 뺄셈식 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201791,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-07",
+            "f_mchapter_nm": "덧셈과 뺄셈",
+            "f_lchapter_id": 17122836,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12234994,
+            "f_schapter_nm": "0을 더하거나 빼기, 전체 빼기",
+            "f_tchapter_id": 12236936,
+            "f_tchapter_nm": "그림을 보고 0 더하기 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201792,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "길이 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12234996,
+            "f_schapter_nm": "2가지의 길이 비교하기",
+            "f_tchapter_id": 12236949,
+            "f_tchapter_nm": "두 가지의 길이를 비교하여 말로 표현하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201793,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "무게 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12234998,
+            "f_schapter_nm": "2가지의 무게 비교하기",
+            "f_tchapter_id": 12236957,
+            "f_tchapter_nm": "두 가지의 무게를 비교하여 말로 표현하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201794,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "넓이 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12235000,
+            "f_schapter_nm": "2가지의 넓이 비교하기",
+            "f_tchapter_id": 12236964,
+            "f_tchapter_nm": "두 가지의 넓이를 비교하여 말로 표현하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201795,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "담을 수 있는 양 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12235002,
+            "f_schapter_nm": "2가지의 담을 수 있는 양 비교하기",
+            "f_tchapter_id": 12236973,
+            "f_tchapter_nm": "두 가지의 담을 수 있는 양을 비교하여 말로 표현하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201796,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "높이 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12235004,
+            "f_schapter_nm": "2가지의 높이 비교하기",
+            "f_tchapter_id": 12236981,
+            "f_tchapter_nm": "높은 것에 표시하기-2가지 비교",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201797,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "키 비교하기",
+            "f_lchapter_id": 17122837,
+            "f_lchapter_nm": "4. 비교하기",
+            "f_schapter_id": 12235006,
+            "f_schapter_nm": "2가지의 키 비교하기",
+            "f_tchapter_id": 12236990,
+            "f_tchapter_nm": "작은 것에 표시하기-2가지 비교",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201798,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "10 알아보기",
+            "f_lchapter_id": 17122838,
+            "f_lchapter_nm": "5. 50까지의 수",
+            "f_schapter_id": 12235008,
+            "f_schapter_nm": "10 알아보기",
+            "f_tchapter_id": 12236997,
+            "f_tchapter_nm": "10 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201799,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "십몇 알아보기",
+            "f_lchapter_id": 17122838,
+            "f_lchapter_nm": "5. 50까지의 수",
+            "f_schapter_id": 12235011,
+            "f_schapter_nm": "십몇 알아보기",
+            "f_tchapter_id": 12237007,
+            "f_tchapter_nm": "그림을 보고 19까지의 수 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201800,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-02",
+            "f_mchapter_nm": "몇십과 몇십몇을 알아보기",
+            "f_lchapter_id": 17122838,
+            "f_lchapter_nm": "5. 50까지의 수",
+            "f_schapter_id": 12235015,
+            "f_schapter_nm": "몇십(10~50) 알아보기",
+            "f_tchapter_id": 12237024,
+            "f_tchapter_nm": "그림을 보고 몇십(10~50) 알기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201801,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "50까지의 수의 순서",
+            "f_lchapter_id": 17122838,
+            "f_lchapter_nm": "5. 50까지의 수",
+            "f_schapter_id": 12235018,
+            "f_schapter_nm": "50까지 수의 순서 알아보기",
+            "f_tchapter_id": 12237035,
+            "f_tchapter_nm": "50까지의 수를 수 배열표에 알맞게 써넣기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201802,
+            "f_subject_id": 2212,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "두 수의 크기 비교",
+            "f_lchapter_id": 17122838,
+            "f_lchapter_nm": "5. 50까지의 수",
+            "f_schapter_id": 12235020,
+            "f_schapter_nm": "10개씩 묶음의 수가 다른 경우",
+            "f_tchapter_id": 12237045,
+            "f_tchapter_nm": "그림으로 두 수의 크기 비교하기-10개씩 묶음의 수가 다른 경우",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201803,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-02",
+            "f_mchapter_nm": "백과 몇백 알아보기",
+            "f_lchapter_id": 17122839,
+            "f_lchapter_nm": "1. 세 자리 수",
+            "f_schapter_id": 12235023,
+            "f_schapter_nm": "백 알아보기",
+            "f_tchapter_id": 12237054,
+            "f_tchapter_nm": "그림으로 백 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201804,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-02",
+            "f_mchapter_nm": "세 자리 수 알아보기",
+            "f_lchapter_id": 17122839,
+            "f_lchapter_nm": "1. 세 자리 수",
+            "f_schapter_id": 12235025,
+            "f_schapter_nm": "세 자리 수 알아보기",
+            "f_tchapter_id": 12237062,
+            "f_tchapter_nm": "그림으로 세 자리 수 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201805,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "뛰어 세기",
+            "f_lchapter_id": 17122839,
+            "f_lchapter_nm": "1. 세 자리 수",
+            "f_schapter_id": 12235027,
+            "f_schapter_nm": "1, 10, 100씩 뛰어 세기",
+            "f_tchapter_id": 12237073,
+            "f_tchapter_nm": "100씩 뛰어 세기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201806,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "두 수의 크기 비교",
+            "f_lchapter_id": 17122839,
+            "f_lchapter_nm": "1. 세 자리 수",
+            "f_schapter_id": 12235029,
+            "f_schapter_nm": "두 수의 크기 비교",
+            "f_tchapter_id": 12237080,
+            "f_tchapter_nm": "두 수의 크기 비교를 읽고 쓰기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201807,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-03",
+            "f_mchapter_nm": "도형",
+            "f_lchapter_id": 17122840,
+            "f_lchapter_nm": "2. 여러 가지 도형",
+            "f_schapter_id": 12235031,
+            "f_schapter_nm": "삼각형",
+            "f_tchapter_id": 12237090,
+            "f_tchapter_nm": "삼각형 알아보고 찾기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201808,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-02",
+            "f_mchapter_nm": "쌓기나무",
+            "f_lchapter_id": 17122840,
+            "f_lchapter_nm": "2. 여러 가지 도형",
+            "f_schapter_id": 12235038,
+            "f_schapter_nm": "쌓기나무의 개수 알아보기",
+            "f_tchapter_id": 12237118,
+            "f_tchapter_nm": "2층까지 이루어진 쌓기나무의 개수 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201809,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "덧셈",
+            "f_lchapter_id": 17122841,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12235041,
+            "f_schapter_nm": "받아올림이 있는 (두 자리 수)+(한 자리 수)",
+            "f_tchapter_id": 12237133,
+            "f_tchapter_nm": "그림을 보고 받아올림이 있는 (두 자리 수)+(한 자리 수) 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201810,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "뺄셈",
+            "f_lchapter_id": 17122841,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12235045,
+            "f_schapter_nm": "받아내림이 있는 (두 자리 수)-(한 자리 수)",
+            "f_tchapter_id": 12237150,
+            "f_tchapter_nm": "그림을 보고 받아내림이 있는 (두 자리 수)-(한 자리 수) 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201811,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-07",
+            "f_mchapter_nm": "덧셈과 뺄셈의 관계",
+            "f_lchapter_id": 17122841,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12235050,
+            "f_schapter_nm": "덧셈과 뺄셈의 관계",
+            "f_tchapter_id": 12237174,
+            "f_tchapter_nm": "그림을 보고 덧셈식을 뺄셈식으로 나타내기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201812,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-09",
+            "f_mchapter_nm": "□의 값 구하기",
+            "f_lchapter_id": 17122841,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12235051,
+            "f_schapter_nm": "□를 사용하여 덧셈식 만들기",
+            "f_tchapter_id": 12237180,
+            "f_tchapter_nm": "그림을 보고 □를 사용하여 덧셈식으로 나타내기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201813,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-08",
+            "f_mchapter_nm": "세 수의 계산",
+            "f_lchapter_id": 17122841,
+            "f_lchapter_nm": "3. 덧셈과 뺄셈",
+            "f_schapter_id": 12235056,
+            "f_schapter_nm": "세 수의 덧셈",
+            "f_tchapter_id": 12237202,
+            "f_tchapter_nm": "세 수의 덧셈 계산하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201814,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-06",
+            "f_mchapter_nm": "길이 비교하기",
+            "f_lchapter_id": 17122842,
+            "f_lchapter_nm": "4. 길이 재기",
+            "f_schapter_id": 12235060,
+            "f_schapter_nm": "물체의 길이 간접 비교하기",
+            "f_tchapter_id": 12237215,
+            "f_tchapter_nm": "한 가지의 구체물을 이용하여 물체의 길이 비교하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201815,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-10",
+            "f_mchapter_nm": "여러 가지 단위길이로 재기",
+            "f_lchapter_id": 17122842,
+            "f_lchapter_nm": "4. 길이 재기",
+            "f_schapter_id": 12235061,
+            "f_schapter_nm": "한 가지 단위길이로 재기",
+            "f_tchapter_id": 12237217,
+            "f_tchapter_nm": "몸을 이용하여 길이 재기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201816,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-11",
+            "f_mchapter_nm": "자로 길이 재기",
+            "f_lchapter_id": 17122842,
+            "f_lchapter_nm": "4. 길이 재기",
+            "f_schapter_id": 12235063,
+            "f_schapter_nm": "1 cm 알아보기",
+            "f_tchapter_id": 12237225,
+            "f_tchapter_nm": "임의 단위길이의 불편함 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201817,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수03-12",
+            "f_mchapter_nm": "길이를 어림해 보고 재어 보기",
+            "f_lchapter_id": 17122842,
+            "f_lchapter_nm": "4. 길이 재기",
+            "f_schapter_id": 12235067,
+            "f_schapter_nm": "자로 재지 않고 길이 어림하기",
+            "f_tchapter_id": 12237246,
+            "f_tchapter_nm": "1 cm를 몇 번 늘어 놓았는지 생각하여 어림하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201818,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수04-01",
+            "f_mchapter_nm": "분류하기",
+            "f_lchapter_id": 17122843,
+            "f_lchapter_nm": "5. 분류하기",
+            "f_schapter_id": 12235069,
+            "f_schapter_nm": "분류하는 방법 알아보기",
+            "f_tchapter_id": 12237252,
+            "f_tchapter_nm": "분류 기준 알아보기",
+            "area": "자료와 가능성"
+        },
+        {
+            "id": 14201819,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-10",
+            "f_mchapter_nm": "묶어 세기",
+            "f_lchapter_id": 17122844,
+            "f_lchapter_nm": "6. 곱셈",
+            "f_schapter_id": 12235073,
+            "f_schapter_nm": "여러 가지 방법으로 세기",
+            "f_tchapter_id": 12237266,
+            "f_tchapter_nm": "여러 가지 방법으로 물건의 수 세기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201820,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-11",
+            "f_mchapter_nm": "곱셈식 알아보기",
+            "f_lchapter_id": 17122844,
+            "f_lchapter_nm": "6. 곱셈",
+            "f_schapter_id": 12235076,
+            "f_schapter_nm": "곱하기로 나타내기",
+            "f_tchapter_id": 12237277,
+            "f_tchapter_nm": "묶음(배)을 곱셈 기호로 나타내기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201821,
+            "f_subject_id": 2214,
+            "성취기준코드": "2수01-10",
+            "f_mchapter_nm": "곱셈식을 활용하기",
+            "f_lchapter_id": 17122844,
+            "f_lchapter_nm": "6. 곱셈",
+            "f_schapter_id": 12235080,
+            "f_schapter_nm": "곱셈과 덧셈(뺄셈)을 활용하기",
+            "f_tchapter_id": 12237294,
+            "f_tchapter_nm": "곱셈과 덧셈(뺄셈)의 활용-식료품",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201857,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "몇십 알아보기",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235231,
+            "f_schapter_nm": "60, 70, 80, 90 알아보기",
+            "f_tchapter_id": 12237462,
+            "f_tchapter_nm": "60, 70, 80, 90을 묶음으로 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201858,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "99까지의 수 알아보기",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235232,
+            "f_schapter_nm": "99까지의 수 알아보기",
+            "f_tchapter_id": 12237465,
+            "f_tchapter_nm": "그림에서 99까지의 수를 묶음과 낱개로 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201859,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "수의 순서 알아보기",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235234,
+            "f_schapter_nm": "1만큼 더 큰 수와 1만큼 더 작은 수, 사이에 있는 수 알아보기",
+            "f_tchapter_id": 12237473,
+            "f_tchapter_nm": "주어진 수보다 1만큼 더 큰 수, 1만큼 더 작은 수 구하기-100까지의 수",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201860,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "두 수의 크기 비교하기",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235236,
+            "f_schapter_nm": "10개씩 묶음의 수가 다른 두 수의 크기 비교-100까지의 수",
+            "f_tchapter_id": 12237483,
+            "f_tchapter_nm": "10개씩 묶음의 수가 다른 그림을 보고 크기 비교하기-100까지의 수",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201861,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "여러 개의 수의 크기 비교하기",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235238,
+            "f_schapter_nm": "여러 개의 수의 크기 비교-100까지의 수",
+            "f_tchapter_id": 12237491,
+            "f_tchapter_nm": "가장 큰 수, 가장 작은 수 찾기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201862,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-04",
+            "f_mchapter_nm": "짝수와 홀수",
+            "f_lchapter_id": 17122912,
+            "f_lchapter_nm": "1. 100까지의 수",
+            "f_schapter_id": 12235240,
+            "f_schapter_nm": "짝수와 홀수",
+            "f_tchapter_id": 12237499,
+            "f_tchapter_nm": "그림을 보고 짝수와 홀수 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201863,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "한 자리 세 수의 계산",
+            "f_lchapter_id": 17122913,
+            "f_lchapter_nm": "2. 덧셈과 뺄셈(1)",
+            "f_schapter_id": 12235241,
+            "f_schapter_nm": "한 자리 세 수의 덧셈",
+            "f_tchapter_id": 12237502,
+            "f_tchapter_nm": "그림을 보고 한 자리 세 수의 덧셈하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201864,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "두 수를 더하기",
+            "f_lchapter_id": 17122913,
+            "f_lchapter_nm": "2. 덧셈과 뺄셈(1)",
+            "f_schapter_id": 12235243,
+            "f_schapter_nm": "이어 세기를 통해 두 수 더하기",
+            "f_tchapter_id": 12237512,
+            "f_tchapter_nm": "이어 세기를 통해 두 수 더하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201865,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "10이 되는 더하기",
+            "f_lchapter_id": 17122913,
+            "f_lchapter_nm": "2. 덧셈과 뺄셈(1)",
+            "f_schapter_id": 12235245,
+            "f_schapter_nm": "10이 되는 더하기",
+            "f_tchapter_id": 12237517,
+            "f_tchapter_nm": "그림을 보고 10이 되는 덧셈하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201866,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "10에서 빼기",
+            "f_lchapter_id": 17122913,
+            "f_lchapter_nm": "2. 덧셈과 뺄셈(1)",
+            "f_schapter_id": 12235249,
+            "f_schapter_nm": "10에서 빼기",
+            "f_tchapter_id": 12237527,
+            "f_tchapter_nm": "그림을 보고 10에서 빼는 뺄셈하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201867,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "10을 만들어 더하기",
+            "f_lchapter_id": 17122913,
+            "f_lchapter_nm": "2. 덧셈과 뺄셈(1)",
+            "f_schapter_id": 12235254,
+            "f_schapter_nm": "두 수의 합이 10이 되는 세 수의 덧셈하기",
+            "f_tchapter_id": 12237540,
+            "f_tchapter_nm": "그림으로 두 수의 합이 10이 되는 세 수의 덧셈 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201868,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-03",
+            "f_mchapter_nm": "여러 가지 모양 찾아보기",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235255,
+            "f_schapter_nm": "물건의 모양 알아보기",
+            "f_tchapter_id": 12237544,
+            "f_tchapter_nm": "모양이 같은 물건 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201869,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-03",
+            "f_mchapter_nm": "여러 가지 모양 알아보기",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235257,
+            "f_schapter_nm": "여러 가지 모양 알아보기",
+            "f_tchapter_id": 12237551,
+            "f_tchapter_nm": "네모 모양 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201870,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-04",
+            "f_mchapter_nm": "여러 가지 모양 만들기",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235260,
+            "f_schapter_nm": "여러 가지 모양 만들기",
+            "f_tchapter_id": 12237559,
+            "f_tchapter_nm": "여러 가지 모양 만들기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201871,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-07",
+            "f_mchapter_nm": "몇 시 알아보기",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235262,
+            "f_schapter_nm": "몇 시를 읽기",
+            "f_tchapter_id": 12237566,
+            "f_tchapter_nm": "시계를 보고 바늘이 가리키는 숫자와 시각 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201872,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-08",
+            "f_mchapter_nm": "몇 시 30분 알아보기",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235265,
+            "f_schapter_nm": "몇 시 30분을 읽기",
+            "f_tchapter_id": 12237577,
+            "f_tchapter_nm": "시계를 보고 바늘이 가리키는 숫자와 시각 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201873,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수03-09",
+            "f_mchapter_nm": "몇 시, 몇 시 30분의 응용",
+            "f_lchapter_id": 17122914,
+            "f_lchapter_nm": "3. 모양과 시각",
+            "f_schapter_id": 12235269,
+            "f_schapter_nm": "몇 시, 몇 시 30분 읽기",
+            "f_tchapter_id": 12237590,
+            "f_tchapter_nm": "계획표대로 했는지 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201874,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-04",
+            "f_mchapter_nm": "10을 이용하여 모으기와 가르기",
+            "f_lchapter_id": 17122915,
+            "f_lchapter_nm": "4. 덧셈과 뺄셈(2)",
+            "f_schapter_id": 12235273,
+            "f_schapter_nm": "10을 이용하여 모으기와 가르기",
+            "f_tchapter_id": 12237602,
+            "f_tchapter_nm": "10을 이용하여 모으기와 가르기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201875,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "받아올림이 있는 덧셈",
+            "f_lchapter_id": 17122915,
+            "f_lchapter_nm": "4. 덧셈과 뺄셈(2)",
+            "f_schapter_id": 12235274,
+            "f_schapter_nm": "여러 가지 방법으로 받아올림이 있는 덧셈하기",
+            "f_tchapter_id": 12237603,
+            "f_tchapter_nm": "이어 세기로 받아올림이 있는 덧셈하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201876,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "받아내림이 있는 뺄셈",
+            "f_lchapter_id": 17122915,
+            "f_lchapter_nm": "4. 덧셈과 뺄셈(2)",
+            "f_schapter_id": 12235278,
+            "f_schapter_nm": "여러 가지 방법으로 받아내림이 있는 뺄셈하기",
+            "f_tchapter_id": 12237615,
+            "f_tchapter_nm": "거꾸로 세어 받아내림이 있는 뺄셈하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201877,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수02-01",
+            "f_mchapter_nm": "규칙 찾기",
+            "f_lchapter_id": 17122916,
+            "f_lchapter_nm": "5. 규칙 찾기",
+            "f_schapter_id": 12235282,
+            "f_schapter_nm": "반복되는 규칙 찾기",
+            "f_tchapter_id": 12237628,
+            "f_tchapter_nm": "2마디 반복에서 규칙 찾기",
+            "area": "변화와 관계"
+        },
+        {
+            "id": 14201878,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수02-01",
+            "f_mchapter_nm": "규칙 만들기(1)",
+            "f_lchapter_id": 17122916,
+            "f_lchapter_nm": "5. 규칙 찾기",
+            "f_schapter_id": 12235283,
+            "f_schapter_nm": "규칙을 찾아 여러 가지 방법으로 나타내기",
+            "f_tchapter_id": 12237631,
+            "f_tchapter_nm": "규칙 찾아 여러 가지 방법으로 나타내기",
+            "area": "변화와 관계"
+        },
+        {
+            "id": 14201879,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수02-02",
+            "f_mchapter_nm": "규칙 만들기(2)",
+            "f_lchapter_id": 17122916,
+            "f_lchapter_nm": "5. 규칙 찾기",
+            "f_schapter_id": 12235284,
+            "f_schapter_nm": "규칙을 만들어 무늬 꾸미기",
+            "f_tchapter_id": 12237634,
+            "f_tchapter_nm": "규칙 찾기-타일 모양",
+            "area": "변화와 관계"
+        },
+        {
+            "id": 14201880,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수02-01",
+            "f_mchapter_nm": "규칙 찾기(수)",
+            "f_lchapter_id": 17122916,
+            "f_lchapter_nm": "5. 규칙 찾기",
+            "f_schapter_id": 12235285,
+            "f_schapter_nm": "수 배열에서 규칙 찾기",
+            "f_tchapter_id": 12237638,
+            "f_tchapter_nm": "수 배열에서 규칙 찾기",
+            "area": "변화와 관계"
+        },
+        {
+            "id": 14201881,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "덧셈하기(1)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235288,
+            "f_schapter_nm": "몇십과 몇의 합",
+            "f_tchapter_id": 12237648,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십과 몇의 합 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201882,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "덧셈하기(2)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235290,
+            "f_schapter_nm": "몇십과 몇십의 합",
+            "f_tchapter_id": 12237656,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십과 몇십의 합 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201883,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-07",
+            "f_mchapter_nm": "덧셈하기(3)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235291,
+            "f_schapter_nm": "몇십몇과 몇십몇의 합",
+            "f_tchapter_id": 12237660,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십몇과 몇십몇의 합 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201885,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-05",
+            "f_mchapter_nm": "뺄셈하기(1)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235294,
+            "f_schapter_nm": "몇십몇과 몇의 차",
+            "f_tchapter_id": 12237670,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십몇과 몇의 차 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201886,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-06",
+            "f_mchapter_nm": "뺄셈하기(2)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235295,
+            "f_schapter_nm": "몇십과 몇십의 차",
+            "f_tchapter_id": 12237674,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십과 몇십의 차 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201887,
+            "f_subject_id": 2213,
+            "성취기준코드": "2수01-07",
+            "f_mchapter_nm": "뺄셈하기(3)",
+            "f_lchapter_id": 17122917,
+            "f_lchapter_nm": "6. 덧셈과 뺄셈(3)",
+            "f_schapter_id": 12235296,
+            "f_schapter_nm": "몇십몇과 몇십몇의 차",
+            "f_tchapter_id": 12237678,
+            "f_tchapter_nm": "여러 가지 방법으로 몇십몇과 몇십몇의 차 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201889,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-01",
+            "f_mchapter_nm": "1000과 몇천 알아보기",
+            "f_lchapter_id": 17122918,
+            "f_lchapter_nm": "1. 네 자리 수",
+            "f_schapter_id": 12235299,
+            "f_schapter_nm": "1000 알아보기",
+            "f_tchapter_id": 12237689,
+            "f_tchapter_nm": "1000 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201890,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-02",
+            "f_mchapter_nm": "네 자리 수 알아보기",
+            "f_lchapter_id": 17122918,
+            "f_lchapter_nm": "1. 네 자리 수",
+            "f_schapter_id": 12235305,
+            "f_schapter_nm": "네 자리 수 알아보기",
+            "f_tchapter_id": 12237705,
+            "f_tchapter_nm": "그림을 보고 네 자리 수 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201891,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "뛰어 세기",
+            "f_lchapter_id": 17122918,
+            "f_lchapter_nm": "1. 네 자리 수",
+            "f_schapter_id": 12235309,
+            "f_schapter_nm": "1000씩 뛰어 세기",
+            "f_tchapter_id": 12237716,
+            "f_tchapter_nm": "1000씩 뛰어 세기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201892,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-03",
+            "f_mchapter_nm": "두 수의 크기 비교",
+            "f_lchapter_id": 17122918,
+            "f_lchapter_nm": "1. 네 자리 수",
+            "f_schapter_id": 12235314,
+            "f_schapter_nm": "두 수의 크기 비교",
+            "f_tchapter_id": 12237733,
+            "f_tchapter_nm": "두 수의 크기 비교한 것을 쓰고 읽기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201893,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-11",
+            "f_mchapter_nm": "2단, 3단, 5단, 6단 곱셈구구",
+            "f_lchapter_id": 17122919,
+            "f_lchapter_nm": "2. 곱셈구구",
+            "f_schapter_id": 12235318,
+            "f_schapter_nm": "2단, 5단 곱셈구구",
+            "f_tchapter_id": 12237745,
+            "f_tchapter_nm": "그림을 보고 2단, 5단 곱셈구구 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201894,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-11",
+            "f_mchapter_nm": "4단, 7단, 8단, 9단 곱셈구구",
+            "f_lchapter_id": 17122919,
+            "f_lchapter_nm": "2. 곱셈구구",
+            "f_schapter_id": 12235320,
+            "f_schapter_nm": "4단, 8단 곱셈구구",
+            "f_tchapter_id": 12237755,
+            "f_tchapter_nm": "그림을 보고 4단, 8단 곱셈구구 알아보기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201895,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-10",
+            "f_mchapter_nm": "1단 곱셈구구와 0의 곱",
+            "f_lchapter_id": 17122919,
+            "f_lchapter_nm": "2. 곱셈구구",
+            "f_schapter_id": 12235324,
+            "f_schapter_nm": "1단 곱셈구구와 0의 곱",
+            "f_tchapter_id": 12237773,
+            "f_tchapter_nm": "그림을 보고 1단 곱셈구구와 0의 곱 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201896,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-10",
+            "f_mchapter_nm": "곱셈표",
+            "f_lchapter_id": 17122919,
+            "f_lchapter_nm": "2. 곱셈구구",
+            "f_schapter_id": 12235325,
+            "f_schapter_nm": "곱셈표 만들기",
+            "f_tchapter_id": 12237777,
+            "f_tchapter_nm": "곱셈표의 빈칸 채우기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201897,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수01-10",
+            "f_mchapter_nm": "곱셈구구를 활용하기",
+            "f_lchapter_id": 17122919,
+            "f_lchapter_nm": "2. 곱셈구구",
+            "f_schapter_id": 12235327,
+            "f_schapter_nm": "곱셈으로 모두 몇 개인지 알아보기",
+            "f_tchapter_id": 12237781,
+            "f_tchapter_nm": "그림을 보고 모두 몇 개인지 여러 가지 방법으로 식을 세워 보고 구하기",
+            "area": "수와 연산"
+        },
+        {
+            "id": 14201898,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-10",
+            "f_mchapter_nm": "길이 알아보기",
+            "f_lchapter_id": 17122920,
+            "f_lchapter_nm": "3. 길이 재기",
+            "f_schapter_id": 12235329,
+            "f_schapter_nm": "m와 cm 단위의 관계",
+            "f_tchapter_id": 12237788,
+            "f_tchapter_nm": "1 m 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201899,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-13",
+            "f_mchapter_nm": "길이의 합",
+            "f_lchapter_id": 17122920,
+            "f_lchapter_nm": "3. 길이 재기",
+            "f_schapter_id": 12235332,
+            "f_schapter_nm": "길이의 합 구하기",
+            "f_tchapter_id": 12237797,
+            "f_tchapter_nm": "그림을 보고 길이의 합 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201900,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-13",
+            "f_mchapter_nm": "길이의 차",
+            "f_lchapter_id": 17122920,
+            "f_lchapter_nm": "3. 길이 재기",
+            "f_schapter_id": 12235334,
+            "f_schapter_nm": "길이의 차 구하기",
+            "f_tchapter_id": 12237807,
+            "f_tchapter_nm": "그림을 보고 길이의 차 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201901,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-12",
+            "f_mchapter_nm": "길이 어림하기",
+            "f_lchapter_id": 17122920,
+            "f_lchapter_nm": "3. 길이 재기",
+            "f_schapter_id": 12235336,
+            "f_schapter_nm": "길이 어림하기",
+            "f_tchapter_id": 12237818,
+            "f_tchapter_nm": "내 몸의 일부를 이용하여 물건의 길이를 어림하기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201902,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-07",
+            "f_mchapter_nm": "시각과 시간",
+            "f_lchapter_id": 17122921,
+            "f_lchapter_nm": "4. 시각과 시간",
+            "f_schapter_id": 12235337,
+            "f_schapter_nm": "시각 알아보기(1) - 5분 단위",
+            "f_tchapter_id": 12237822,
+            "f_tchapter_nm": "긴바늘이 가리키는 숫자와 나타내는 분 알아보기-5분 단위",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201903,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-09",
+            "f_mchapter_nm": "하루의 시간 알아보기",
+            "f_lchapter_id": 17122921,
+            "f_lchapter_nm": "4. 시각과 시간",
+            "f_schapter_id": 12235342,
+            "f_schapter_nm": "하루의 시간 알아보기",
+            "f_tchapter_id": 12237848,
+            "f_tchapter_nm": "짧은(긴)바늘이 도는 바퀴의 횟수에 따른 시간 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201904,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수03-09",
+            "f_mchapter_nm": "달력 알아보기",
+            "f_lchapter_id": 17122921,
+            "f_lchapter_nm": "4. 시각과 시간",
+            "f_schapter_id": 12235344,
+            "f_schapter_nm": "달력 알아보기",
+            "f_tchapter_id": 12237855,
+            "f_tchapter_nm": "달력 보고 요일과 날짜 알아보기",
+            "area": "도형과 측정"
+        },
+        {
+            "id": 14201905,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수04-02",
+            "f_mchapter_nm": "표로 나타내기",
+            "f_lchapter_id": 17122922,
+            "f_lchapter_nm": "5. 표와 그래프",
+            "f_schapter_id": 12235346,
+            "f_schapter_nm": "자료 조사하기",
+            "f_tchapter_id": 12237862,
+            "f_tchapter_nm": "주어진 자료를 보고 문제 해결하기",
+            "area": "자료와 가능성"
+        },
+        {
+            "id": 14201906,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수04-03",
+            "f_mchapter_nm": "그래프로 나타내기",
+            "f_lchapter_id": 17122922,
+            "f_lchapter_nm": "5. 표와 그래프",
+            "f_schapter_id": 12235350,
+            "f_schapter_nm": "표를 보고 그래프로 나타내기",
+            "f_tchapter_id": 12237871,
+            "f_tchapter_nm": "표를 보고 그래프로 나타내고 문제 해결하기",
+            "area": "자료와 가능성"
+        },
+        {
+            "id": 14201907,
+            "f_subject_id": 2215,
+            "성취기준코드": "2수02-01",
+            "f_mchapter_nm": "규칙 찾기",
+            "f_lchapter_id": 17122923,
+            "f_lchapter_nm": "6. 규칙 찾기",
+            "f_schapter_id": 12235353,
+            "f_schapter_nm": "덧셈표에서 규칙 찾기",
+            "f_tchapter_id": 12237880,
+            "f_tchapter_nm": "덧셈표 완성하기",
+            "area": "변화와 관계"
+        }
+    ],
+    "edges": [
+        {
+            "source": 14201805,
+            "target": 14201806
+        },
+        {
+            "source": 14201872,
+            "target": 14201902
+        },
+        {
+            "source": 14201873,
+            "target": 14201903
+        },
+        {
+            "source": 14201793,
+            "target": 14201794
+        },
+        {
+            "source": 14201875,
+            "target": 14201876
+        },
+        {
+            "source": 14201804,
+            "target": 14201889
+        },
+        {
+            "source": 14201885,
+            "target": 14201810
+        },
+        {
+            "source": 14201881,
+            "target": 14201885
+        },
+        {
+            "source": 14201885,
+            "target": 14201886
+        },
+        {
+            "source": 14201779,
+            "target": 14201780
+        },
+        {
+            "source": 14201784,
+            "target": 14201785
+        },
+        {
+            "source": 14201794,
+            "target": 14201795
+        },
+        {
+            "source": 14201790,
+            "target": 14201791
+        },
+        {
+            "source": 14201858,
+            "target": 14201889
+        },
+        {
+            "source": 14201882,
+            "target": 14201883
+        },
+        {
+            "source": 14201790,
+            "target": 14201809
+        },
+        {
+            "source": 14201859,
+            "target": 14201860
+        },
+        {
+            "source": 14201860,
+            "target": 14201861
+        },
+        {
+            "source": 14201782,
+            "target": 14201789
+        },
+        {
+            "source": 14201801,
+            "target": 14201802
+        },
+        {
+            "source": 14201783,
+            "target": 14201790
+        },
+        {
+            "source": 14201867,
+            "target": 14201881
+        },
+        {
+            "source": 14201820,
+            "target": 14201821
+        },
+        {
+            "source": 14201821,
+            "target": 14201893
+        },
+        {
+            "source": 14201799,
+            "target": 14201857
+        },
+        {
+            "source": 14201857,
+            "target": 14201858
+        },
+        {
+            "source": 14201889,
+            "target": 14201890
+        },
+        {
+            "source": 14201798,
+            "target": 14201799
+        },
+        {
+            "source": 14201879,
+            "target": 14201907
+        },
+        {
+            "source": 14201799,
+            "target": 14201862
+        },
+        {
+            "source": 14201890,
+            "target": 14201891
+        },
+        {
+            "source": 14201886,
+            "target": 14201887
+        },
+        {
+            "source": 14201875,
+            "target": 14201809
+        },
+        {
+            "source": 14201858,
+            "target": 14201859
+        },
+        {
+            "source": 14201818,
+            "target": 14201905
+        },
+        {
+            "source": 14201868,
+            "target": 14201807
+        },
+        {
+            "source": 14201864,
+            "target": 14201865
+        },
+        {
+            "source": 14201891,
+            "target": 14201892
+        },
+        {
+            "source": 14201792,
+            "target": 14201796
+        },
+        {
+            "source": 14201796,
+            "target": 14201797
+        },
+        {
+            "source": 14201893,
+            "target": 14201894
+        },
+        {
+            "source": 14201780,
+            "target": 14201798
+        },
+        {
+            "source": 14201791,
+            "target": 14201883
+        },
+        {
+            "source": 14201865,
+            "target": 14201866
+        },
+        {
+            "source": 14201861,
+            "target": 14201862
+        },
+        {
+            "source": 14201898,
+            "target": 14201899
+        },
+        {
+            "source": 14201802,
+            "target": 14201803
+        },
+        {
+            "source": 14201861,
+            "target": 14201889
+        },
+        {
+            "source": 14201862,
+            "target": 14201863
+        },
+        {
+            "source": 14201894,
+            "target": 14201895
+        },
+        {
+            "source": 14201899,
+            "target": 14201900
+        },
+        {
+            "source": 14201803,
+            "target": 14201804
+        },
+        {
+            "source": 14201781,
+            "target": 14201801
+        },
+        {
+            "source": 14201876,
+            "target": 14201883
+        },
+        {
+            "source": 14201878,
+            "target": 14201880
+        },
+        {
+            "source": 14201895,
+            "target": 14201896
+        },
+        {
+            "source": 14201872,
+            "target": 14201873
+        },
+        {
+            "source": 14201802,
+            "target": 14201805
+        },
+        {
+            "source": 14201868,
+            "target": 14201869
+        },
+        {
+            "source": 14201785,
+            "target": 14201868
+        },
+        {
+            "source": 14201785,
+            "target": 14201807
+        },
+        {
+            "source": 14201807,
+            "target": 14201808
+        },
+        {
+            "source": 14201820,
+            "target": 14201893
+        },
+        {
+            "source": 14201799,
+            "target": 14201800
+        },
+        {
+            "source": 14201863,
+            "target": 14201864
+        },
+        {
+            "source": 14201882,
+            "target": 14201886
+        },
+        {
+            "source": 14201881,
+            "target": 14201882
+        },
+        {
+            "source": 14201804,
+            "target": 14201805
+        },
+        {
+            "source": 14201869,
+            "target": 14201870
+        },
+        {
+            "source": 14201787,
+            "target": 14201798
+        },
+        {
+            "source": 14201816,
+            "target": 14201898
+        },
+        {
+            "source": 14201896,
+            "target": 14201897
+        },
+        {
+            "source": 14201800,
+            "target": 14201801
+        },
+        {
+            "source": 14201810,
+            "target": 14201811
+        },
+        {
+            "source": 14201782,
+            "target": 14201783
+        },
+        {
+            "source": 14201783,
+            "target": 14201802
+        },
+        {
+            "source": 14201902,
+            "target": 14201903
+        },
+        {
+            "source": 14201883,
+            "target": 14201811
+        },
+        {
+            "source": 14201859,
+            "target": 14201806
+        },
+        {
+            "source": 14201815,
+            "target": 14201816
+        },
+        {
+            "source": 14201811,
+            "target": 14201813
+        },
+        {
+            "source": 14201883,
+            "target": 14201813
+        },
+        {
+            "source": 14201800,
+            "target": 14201803
+        },
+        {
+            "source": 14201859,
+            "target": 14201889
+        },
+        {
+            "source": 14201811,
+            "target": 14201812
+        },
+        {
+            "source": 14201866,
+            "target": 14201867
+        },
+        {
+            "source": 14201871,
+            "target": 14201872
+        },
+        {
+            "source": 14201874,
+            "target": 14201889
+        },
+        {
+            "source": 14201817,
+            "target": 14201901
+        },
+        {
+            "source": 14201792,
+            "target": 14201817
+        },
+        {
+            "source": 14201903,
+            "target": 14201904
+        },
+        {
+            "source": 14201792,
+            "target": 14201814
+        },
+        {
+            "source": 14201809,
+            "target": 14201810
+        },
+        {
+            "source": 14201789,
+            "target": 14201790
+        },
+        {
+            "source": 14201871,
+            "target": 14201902
+        },
+        {
+            "source": 14201780,
+            "target": 14201781
+        },
+        {
+            "source": 14201877,
+            "target": 14201878
+        },
+        {
+            "source": 14201781,
+            "target": 14201782
+        },
+        {
+            "source": 14201781,
+            "target": 14201786
+        },
+        {
+            "source": 14201786,
+            "target": 14201787
+        },
+        {
+            "source": 14201781,
+            "target": 14201787
+        },
+        {
+            "source": 14201862,
+            "target": 14201874
+        },
+        {
+            "source": 14201878,
+            "target": 14201879
+        },
+        {
+            "source": 14201880,
+            "target": 14201907
+        },
+        {
+            "source": 14201814,
+            "target": 14201815
+        },
+        {
+            "source": 14201905,
+            "target": 14201906
+        },
+        {
+            "source": 14201863,
+            "target": 14201810
+        },
+        {
+            "source": 14201792,
+            "target": 14201793
+        },
+        {
+            "source": 14201819,
+            "target": 14201820
+        },
+        {
+            "source": 14201812,
+            "target": 14201819
+        },
+        {
+            "source": 14201874,
+            "target": 14201875
+        },
+        {
+            "source": 14201883,
+            "target": 14201887
+        }
+    ]
+}
