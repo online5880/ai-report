@@ -3,7 +3,7 @@
 
 ## 1. 학습 리포트 생성 API
 
-![alt text](SCR-20250110-ddbj.png)
+  <img src="https://github.com/online5880/ai-report/blob/main/images/api_report.png?raw=true" width="50%" height="100%"/>
 
 - **엔드포인트**: `POST /api/streaming-daily-report/`
 - **설명**: 사용자의 학습 기록을 기반으로 AI 리포트를 생성합니다.
@@ -68,7 +68,7 @@
 
 ### 2. `/api/gkt` (POST)
 
-![alt text](image.png)
+  <img src="https://github.com/online5880/ai-report/blob/main/images/api_gkt.png?raw=true" width="50%" height="100%"/>
 
 - **설명**: 사용자의 문제 풀이 이력을 기반으로 다음 문제의 예측 값을 반환하는 엔드포인트입니다.
 - **요청 데이터**:
@@ -136,7 +136,7 @@
 
 ### 3. `/api/gkt/confusion-matrix` (POST)
 
-![alt text](image.png)
+<img src="https://github.com/online5880/ai-report/blob/main/images/api_gkt_confusion.png?raw=true" width="50%" height="100%"/>
 
 - **설명**: 사용자 데이터와 입력 데이터를 기반으로 혼동 행렬을 생성하며, 각 문제에 대한 분석 정보를 포함한 응답을 반환합니다.
 - **요청 데이터**:
@@ -207,7 +207,7 @@
 
 ### 4. `api/graphsage/recommend` (POST)
 
-![alt text](image-1.png)
+  <img src="https://github.com/online5880/ai-report/blob/main/images/api_graphsage.png?raw=true" width="50%" height="100%"/>
 
 
 - **설명**: predictions에서 이해도가 낮은 개념에 대해 유사한 개념을 추천합니다. `top_k`는 최대 추천 개수를 의미합니다.
