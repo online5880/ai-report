@@ -1,6 +1,6 @@
 # KST 이론 기반 AI 리포트
 
-**지식공간 이론(Knowledge Space Theory, KST)**을 기반으로 학습자 개개인의 학습 결손을 추적하고 맞춤형 학습 경로를 제공합니다.
+지식공간 이론(Knowledge Space Theory, KST)을 기반으로 학습자 개개인의 학습 결손을 추적하고 맞춤형 학습 경로를 제공합니다.
 
 ---
 
@@ -12,15 +12,15 @@
     - [프로젝트 목적](#프로젝트-목적)
     - [주요 기능](#주요-기능)
   - [기술 스택](#기술-스택)
-  - [R\&R](#rr)
+  - [R&R](#rr)
   - [CI/CD](#cicd)
   - [아키텍처](#아키텍처)
     - [아키텍처 다이어그램](#아키텍처-다이어그램)
   - [API 문서](#api-문서)
   - [모델 저장소](#모델-저장소)
   - [결과 이미지 및 예시 영상](#결과-이미지-및-예시-영상)
-  - [](#)
   - [데이터 보호 관련 안내](#데이터-보호-관련-안내)
+
 
 ---
 
@@ -150,38 +150,34 @@ DevOps를 활용한 효율적인 CI/CD 파이프라인을 구축했으며, **무
 ---
 
 ## 모델 저장소
-- [GKT](https://github.com/oxorudo/GKT_model)
-- [GraphSAGE](https://github.com/online5880/ai-report/tree/main/graphsage_fixed_edge)
+- [GKT](https://github.com/oxorudo/GKT_model): 학습 숙련도를 추적하는 Knowledge Tracing 모델
+- [GraphSAGE](https://github.com/online5880/ai-report/tree/main/graphsage_fixed_edge): 그래프 기반 데이터 처리 및 학습 추천 모델
+
 
 ---
 
 ## 결과 이미지 및 예시 영상
 
 - **결과 이미지**
-- 캘린더
+  - **캘린더**: 학습 일정 및 진행 상황 시각화
+    <img src="https://github.com/online5880/ai-report/blob/main/images/calendar.png?raw=true" width="75%" height="100%"/>
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/calendar.png?raw=true" width="75%" height="100%"/>
+  - **지식맵**: 학습자의 현재 지식 상태를 네트워크로 시각화
+    <img src="https://github.com/online5880/ai-report/blob/main/images/km.png?raw=true" width="75%" height="100%"/>
 
-- 지식맵
+  - **형성평가**: 학습자의 학습 상태 평가 결과
+    <img src="https://github.com/online5880/ai-report/blob/main/images/test.png?raw=true" width="75%" height="100%"/>
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/km.png?raw=true" width="75%" height="100%"/>
-
-- 형성평가
-
-  <img src="https://github.com/online5880/ai-report/blob/main/images/test.png?raw=true" width="75%" height="100%"/>
-
-- 리포트
-
-  <img src="https://github.com/online5880/ai-report/blob/main/images/report.png?raw=true" width="75%" height="100%"/>
-
----
+  - **리포트**: 학습 결과 및 추천 내용을 종합한 보고서
+    <img src="https://github.com/online5880/ai-report/blob/main/images/report.png?raw=true" width="75%" height="100%"/>
 
 - **예시 영상**
+  - 주요 기능 데모:  
+    [![예시 영상 보기](https://img.youtube.com/vi/OMeEZKgsayc/0.jpg)](https://youtu.be/OMeEZKgsayc)
 
-  [![예시 영상 보기](https://img.youtube.com/vi/OMeEZKgsayc/0.jpg)](https://youtu.be/OMeEZKgsayc)
   
 ---
 
 ## 데이터 보호 관련 안내
 
-> 본 프로젝트는 학습자 데이터를 사용하여 구현되었으며, 데이터의 민감성으로 인해 **중요 데이터는 외부로 유출되지 않으며, 재현이 불가능**합니다.
+> 학습자 데이터를 사용하여 구현되었으며, 데이터의 민감성으로 인해 **중요 데이터는 외부로 유출되지 않으며, 재현이 불가능**합니다.
