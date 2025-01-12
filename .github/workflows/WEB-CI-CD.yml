@@ -3,7 +3,7 @@ name: Django CI/CD with Slack Notification
 on:
   push:
     branches:
-      - main
+      - dev/web
 
 env:
   ECS_TASK_DEFINITION: ecs-task

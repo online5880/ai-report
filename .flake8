@@ -5,6 +5,7 @@ exclude =
   manage.py,
   settings.py
   /.github
+  .md
 
 max-line-length = 999
 
