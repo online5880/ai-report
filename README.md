@@ -31,7 +31,7 @@
 - **총 기간**: 1개월
 
 ### 프로젝트 목적
-이 프로젝트는 2022년 개정 초등학교 1, 2학년 수학 교육과정을 기반으로 학습 데이터를 분석하여 다음을 목표로 합니다:
+2022년 개정 초등학교 1, 2학년 수학 교육과정을 기반으로 학습 데이터를 분석하여 다음을 목표로 합니다:
 - 학습 결손 추적 및 분석
 - 학습자 맞춤 학습 경로 추천
 - 학습 성취도 향상
@@ -138,7 +138,7 @@ DevOps를 활용한 효율적인 CI/CD 파이프라인을 구축했으며, **무
 |---------------|----------------|
 | <img src="https://github.com/online5880/ai-report/blob/main/images/architecture_01.png?raw=true" width="100%" height="100%"/> | <img src="https://github.com/online5880/ai-report/blob/main/images/architecture_02.png?raw=true" width="100%" height="100%"/> |
 
-전체 설명은 **[아키텍처 세부 문서](docs/architecture.md)**를 참조하세요.
+전체 설명은 [아키텍처 세부 문서](docs/architecture.md)를 참조하세요.
 
 ---
 
@@ -148,30 +148,37 @@ DevOps를 활용한 효율적인 CI/CD 파이프라인을 구축했으며, **무
 
 ---
 
+## 모델 저장소
+- [GKT](https://github.com/oxorudo/GKT_model)
+- [GraphSAGE](https://github.com/online5880/ai-report/tree/main/graphsage_fixed_edge)
+
+---
+
 ## 결과 이미지 및 예시 영상
 
-- **결과 이미지**:
+- **결과 이미지**
 - 캘린더
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/calender.png?raw=true" width="100%" height="100%"/>
+  <img src="https://github.com/online5880/ai-report/blob/main/images/calendar.png?raw=true" width="75%" height="100%"/>
 
 - 지식맵
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/km.png?raw=true" width="100%" height="100%"/>
+  <img src="https://github.com/online5880/ai-report/blob/main/images/km.png?raw=true" width="75%" height="100%"/>
 
 - 형성평가
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/test.png?raw=true" width="100%" height="100%"/>
+  <img src="https://github.com/online5880/ai-report/blob/main/images/test.png?raw=true" width="75%" height="100%"/>
 
 - 리포트
 
-  <img src="https://github.com/online5880/ai-report/blob/main/images/report.png?raw=true" width="100%" height="100%"/>
+  <img src="https://github.com/online5880/ai-report/blob/main/images/report.png?raw=true" width="75%" height="100%"/>
 
 ---
 
 - **예시 영상**
 
   [![예시 영상 보기](https://img.youtube.com/vi/OMeEZKgsayc/0.jpg)](https://youtu.be/OMeEZKgsayc)
+  
 ---
 
 ## 데이터 보호 관련 안내
