@@ -168,3 +168,5 @@ docker-compose.yml
 *.pth
 ML/GKT_API/app/filtered_combined_user_data.csv
 *.parquet
+*.csv
+*.json
